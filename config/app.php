@@ -69,6 +69,13 @@ return [
     'trusted_proxies' => env('TRUSTED_PROXIES'),
 
     /*
+    | Send a Content-Security-Policy header (see SecurityHeaders). Disable only
+    | if you serve assets from a CDN or another origin and need to adapt it.
+    */
+
+    'content_security_policy' => (bool) env('SECURITY_CSP', true),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------

@@ -52,7 +52,8 @@ Route::middleware('guest')->group(function () {
 | enforced again inside components and actions, not only here.
 */
 
-Route::middleware(['auth', 'active'])->group(function () {
+// auth.session ends other sessions after a password change or reset.
+Route::middleware(['auth', 'auth.session', 'active'])->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
     Route::get('/', Dashboard::class)->name('dashboard');

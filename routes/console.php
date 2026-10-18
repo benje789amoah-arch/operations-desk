@@ -4,10 +4,13 @@ use App\Actions\GenerateDailyInstances;
 use App\Enums\Role;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Support\OperationsConfig;
 use App\Support\OpsClock;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
 use function Laravel\Prompts\password;
@@ -55,7 +58,8 @@ Schedule::command('operations:generate-instances')
 
 Artisan::command('operations:create-admin {--name=} {--email=}', function (AuditLogger $audit) {
     $name = $this->option('name') ?: text('Full name', required: true);
-    $email = $this->option('email') ?: text('Work email', required: true);
+    // Stored emails are lower case (see User::email()), so validate them that way.
+    $email = Str::lower(trim($this->option('email') ?: text('Work email', required: true)));
     $secret = password('Password (min. 10 characters, mixed case and a number)', required: true);
 
     $validator = Validator::make(
@@ -87,6 +91,60 @@ Artisan::command('operations:create-admin {--name=} {--email=}', function (Audit
 
     return 0;
 })->purpose('Create an administrator account (interactive)');
+
+/*
+|--------------------------------------------------------------------------
+| Environment check
+|--------------------------------------------------------------------------
+|
+| Run after every deployment. Exits non-zero if anything would stop the
+| desk working correctly; warnings flag settings to review for production.
+|
+*/
+
+Artisan::command('operations:check', function (AuditLogger $audit) {
+    $production = app()->isProduction();
+    $rows = [];
+    $add = function (string $status, string $check, string $detail) use (&$rows) {
+        $rows[] = [$status, $check, $detail];
+    };
+
+    $problems = OperationsConfig::problems();
+    $add($problems ? 'FAIL' : 'OK', 'Operations config', $problems ? implode(' ', $problems) : config('operations.timezone').', '.count(config('operations.shifts')).' shifts, carry-over '.config('operations.carry_over_days').' days');
+    $add(config('app.key') ? 'OK' : 'FAIL', 'Application key', config('app.key') ? 'Set' : 'Run php artisan key:generate');
+    $add($production && config('app.debug') ? 'FAIL' : 'OK', 'Debug mode', config('app.debug') ? 'APP_DEBUG=true'.($production ? ' (must be false in production)' : '') : 'Off');
+    $add(file_exists(public_path('build/manifest.json')) ? 'OK' : 'FAIL', 'Front-end assets', file_exists(public_path('build/manifest.json')) ? 'Built' : 'Run npm ci && npm run build');
+
+    if ($production) {
+        $add(str_starts_with((string) config('app.url'), 'https://') ? 'OK' : 'WARN', 'APP_URL uses HTTPS', (string) config('app.url'));
+        $add(config('session.secure') ? 'OK' : 'WARN', 'Secure session cookie', config('session.secure') ? 'On' : 'Set SESSION_SECURE_COOKIE=true');
+        $add(in_array(config('mail.default'), ['log', 'array'], true) ? 'WARN' : 'OK', 'Mail transport', config('mail.default').' (password links need a real mailer)');
+    }
+
+    try {
+        DB::connection()->getPdo();
+        $migrator = app('migrator');
+        $pending = $migrator->repositoryExists()
+            ? array_diff(array_keys($migrator->getMigrationFiles(database_path('migrations'))), $migrator->getRepository()->getRan())
+            : ['all'];
+        $add('OK', 'Database connection', config('database.default').' connected');
+        $add($pending ? 'FAIL' : 'OK', 'Migrations', $pending ? count($pending).' pending: run php artisan migrate --force' : 'Up to date');
+
+        if (! $pending) {
+            $admins = User::query()->active()->where('role', Role::Administrator)->count();
+            $add($admins ? 'OK' : 'WARN', 'Active administrator', $admins ? $admins.' found' : 'Run php artisan operations:create-admin');
+
+            $chain = $audit->verifyChain();
+            $add($chain['valid'] ? 'OK' : 'FAIL', 'Audit log integrity', $chain['valid'] ? $chain['checked'].' events verified' : "Broken at event #{$chain['broken_at']}");
+        }
+    } catch (Throwable $exception) {
+        $add('FAIL', 'Database connection', $exception->getMessage());
+    }
+
+    $this->table(['Status', 'Check', 'Detail'], $rows);
+
+    return collect($rows)->contains(fn ($row) => $row[0] === 'FAIL') ? 1 : 0;
+})->purpose('Check configuration, database and integrity before or after deployment');
 
 Artisan::command('operations:verify-audit-chain', function (AuditLogger $audit) {
     $result = $audit->verifyChain();

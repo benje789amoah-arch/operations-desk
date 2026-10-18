@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AddRequestContext;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\TrustProxies as ConfigurableTrustProxies;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
+            AddRequestContext::class,
             SecurityHeaders::class,
         ]);
 

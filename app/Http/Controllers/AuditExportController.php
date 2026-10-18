@@ -6,13 +6,20 @@ use App\Services\AuditLogger;
 use App\Support\AuditLogQuery;
 use App\Support\CsvWriter;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AuditExportController extends Controller
 {
     public function __invoke(Request $request, AuditLogger $audit): StreamedResponse
     {
-        $filters = $request->only(['from', 'to', 'category', 'actor', 'search']);
+        $filters = $request->validate([
+            'from' => ['nullable', 'date_format:Y-m-d'],
+            'to' => ['nullable', 'date_format:Y-m-d'],
+            'category' => ['nullable', Rule::in(array_keys(AuditLogQuery::CATEGORIES))],
+            'actor' => ['nullable', 'regex:/^(system|\d+)$/'],
+            'search' => ['nullable', 'string', 'max:200'],
+        ]);
 
         $audit->record('report.exported', 'Exported the system audit log to CSV', subjectLabel: 'System audit log', properties: ['filters' => array_filter($filters)]);
 

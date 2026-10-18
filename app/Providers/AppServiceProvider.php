@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\EnsureUserIsActive;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Support\Ability;
+use App\Support\OperationsConfig;
 use App\View\Composers\AppShellComposer;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Lockout;
@@ -13,12 +15,14 @@ use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,6 +39,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        OperationsConfig::assertValid();
+
         $this->registerAbilities();
         $this->registerAuthenticationAuditing();
 
@@ -49,6 +55,14 @@ class AppServiceProvider extends ServiceProvider
         Paginator::defaultView('pagination.default');
 
         View::composer('components.layouts.app', AppShellComposer::class);
+
+        // Livewire re-applies these on every component request made from an
+        // open page, so a deactivated account or a password change elsewhere
+        // takes effect immediately, not only on the next full page load.
+        Livewire::addPersistentMiddleware([
+            AuthenticateSession::class,
+            EnsureUserIsActive::class,
+        ]);
 
         if (config('app.force_https')) {
             URL::forceScheme('https');

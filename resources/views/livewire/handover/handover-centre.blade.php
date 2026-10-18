@@ -22,7 +22,7 @@
         <input id="handover-date" type="date" wire:model.live="date" class="input h-8 w-[10.5rem] font-mono text-[12.5px]">
         <button type="button" wire:click="shiftDay(1)" class="btn btn-secondary btn-sm" aria-label="Next day"><x-lucide-chevron-right class="size-4" /></button>
         @unless ($isToday)
-            <button type="button" wire:click="$set('date', '{{ \App\Support\OpsClock::today()->format('Y-m-d') }}')" class="btn btn-ghost btn-sm text-forest">Today</button>
+            <button type="button" wire:click="goToToday" class="btn btn-ghost btn-sm text-forest">Today</button>
         @endunless
         <div class="ml-auto grid w-full grid-cols-2 gap-2 sm:w-auto sm:flex">
             <label for="handover-person" class="sr-only">Personnel</label>
@@ -147,7 +147,7 @@
             <section class="panel" aria-labelledby="journal-title">
                 <div class="panel-header">
                     <h2 id="journal-title" class="section-title flex items-center gap-2"><x-lucide-history class="size-4 text-slate" /> Update journal</h2>
-                    <p class="meta">{{ $shift ? $shifts[$shift]['label'].' ('.$shifts[$shift]['start'].'–'.$shifts[$shift]['end'].')' : 'Whole day' }} · newest first · {{ $journal->count() }} update{{ $journal->count() === 1 ? '' : 's' }}</p>
+                    <p class="meta">{{ $shift ? $shifts[$shift]['label'].' ('.$shifts[$shift]['start'].'–'.$shifts[$shift]['end'].')' : 'Whole day' }} · newest first · {{ $journal->count() >= $journalLimit ? 'latest '.$journalLimit.' shown — use the history report for the full list' : $journal->count().' update'.($journal->count() === 1 ? '' : 's') }}</p>
                 </div>
                 @if ($journal->isEmpty())
                     <x-ui.empty icon="history" title="No activity updates were recorded for this period" />

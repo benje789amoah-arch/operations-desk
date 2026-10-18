@@ -21,6 +21,12 @@ use Illuminate\Database\Eloquent\Collection;
 class HandoverBoard
 {
     /**
+     * The journal is a handover aid, not the full history (that is the
+     * activity history report), so it shows at most this many updates.
+     */
+    public const JOURNAL_LIMIT = 200;
+
+    /**
      * Outstanding instances sorted so the most urgent are reviewed first:
      * flagged for follow-up, then priority, then reopened, then oldest date.
      *
@@ -76,7 +82,7 @@ class HandoverBoard
             ->when($personId, fn (Builder $q, int $id) => $q->where('user_id', $id))
             ->with('instance.definition')
             ->latest('id')
-            ->limit(200)
+            ->limit(self::JOURNAL_LIMIT)
             ->get();
     }
 

@@ -82,6 +82,7 @@ TRUSTED_PROXIES=            # proxy IPs (comma separated) or * if behind a load 
 OPERATIONS_TIMEZONE=Africa/Accra
 OPERATIONS_CARRY_OVER_DAYS=7
 OPERATIONS_SEED_DEMO_DATA=false
+SECURITY_CSP=true          # Content-Security-Policy header (keep on unless assets come from a CDN)
 
 LOG_CHANNEL=daily
 LOG_LEVEL=warning
@@ -283,6 +284,10 @@ php artisan optimize && sudo systemctl reload php8.3-fpm
 ```
 
 ```bash
+php artisan operations:check
+```
+
+```bash
 php artisan up
 ```
 
@@ -291,6 +296,8 @@ php artisan up
 ## 10. Logging and monitoring
 
 - Use `LOG_CHANNEL=daily` (14 days retained by default) or ship logs to your central logging. Application errors are logged with full context; users only see the friendly error pages.
+- Every response has an `X-Request-Id` header, and the same `request_id` (with the signed-in `user_id`) is attached to every log line written during that request. Ask users for the id shown in their browser's network tools, or search the logs by time and user, to find the matching entries.
+- Run `php artisan operations:check` from monitoring as well as after deployments; it exits non-zero on any failed check.
 - `/up` is a health-check endpoint for load balancers and uptime monitors.
 - Run `php artisan operations:verify-audit-chain` from cron or monitoring (for example daily) and alert on a non-zero exit code.
 - Failed sign-ins and lockouts are recorded in the audit log under *Sign-in & security*.
@@ -334,6 +341,7 @@ Test the restore procedure on a staging server at least quarterly.
 - [ ] `https://` loads the sign-in page with a valid certificate, and `http://` redirects to https.
 - [ ] `https://<host>/.env` and `https://<host>/.git/config` return 403/404.
 - [ ] `APP_DEBUG=false`: visiting a missing URL shows the custom "We could not find that page", not a stack trace.
+- [ ] `php artisan operations:check` reports no FAIL rows and no WARN rows for HTTPS, secure cookies or mail.
 - [ ] `php artisan about` shows the production environment, cached config and routes, and the correct timezone settings.
 - [ ] `/up` returns 200.
 - [ ] The administrator created with `operations:create-admin` can sign in; five wrong passwords trigger the lockout message.

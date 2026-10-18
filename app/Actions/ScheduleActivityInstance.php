@@ -23,11 +23,16 @@ class ScheduleActivityInstance
         $day = OpsClock::date($date);
 
         if ($definition->isArchived()) {
-            throw ValidationException::withMessages(['definition' => 'Archived definitions cannot be scheduled. Restore it first.']);
+            throw ValidationException::withMessages(['scheduleDefinition' => 'Archived definitions cannot be scheduled. Restore it first.']);
+        }
+
+        // Adding work to a past day would fabricate history.
+        if ($day->lessThan(OpsClock::today())) {
+            throw ValidationException::withMessages(['scheduleDefinition' => 'Activities can only be scheduled for today or a future date.']);
         }
 
         if (ActivityInstance::query()->where('activity_definition_id', $definition->id)->onDate($day)->exists()) {
-            throw ValidationException::withMessages(['date' => sprintf('%s is already on the register for %s.', $definition->code, $day->format('d M Y'))]);
+            throw ValidationException::withMessages(['scheduleDefinition' => sprintf('%s is already on the register for %s.', $definition->code, $day->format('d M Y'))]);
         }
 
         return DB::transaction(function () use ($definition, $day, $assignee, $actor) {

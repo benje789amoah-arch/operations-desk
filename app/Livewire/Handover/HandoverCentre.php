@@ -41,18 +41,15 @@ class HandoverCentre extends Component
     /** @var array<int, string> */
     public array $acknowledgementNotes = [];
 
-    public function mount(GenerateDailyInstances $generator): void
+    public function mount(): void
     {
-        $this->date = OpsClock::safeDate($this->date ?: null)->format('Y-m-d');
         $this->handoverShift = OpsClock::currentShift()['key'] ?? array_key_first(config('operations.shifts'));
 
         if (! array_key_exists($this->shift, config('operations.shifts'))) {
             $this->shift = '';
         }
 
-        if ($this->day()->isSameDay(OpsClock::today())) {
-            $generator->handle($this->day());
-        }
+        $this->showDate(OpsClock::safeDate($this->date ?: null));
     }
 
     public function day(): CarbonImmutable
@@ -62,12 +59,37 @@ class HandoverCentre extends Component
 
     public function updatedDate(): void
     {
-        $this->date = $this->day()->format('Y-m-d');
+        $this->showDate($this->day());
+    }
+
+    public function updatedShift(): void
+    {
+        if (! array_key_exists($this->shift, config('operations.shifts'))) {
+            $this->shift = '';
+        }
     }
 
     public function shiftDay(int $days): void
     {
-        $this->date = $this->day()->addDays($days)->format('Y-m-d');
+        $this->showDate($this->day()->addDays($days));
+    }
+
+    public function goToToday(): void
+    {
+        $this->showDate(OpsClock::today());
+    }
+
+    /**
+     * Today's instances are generated on demand (idempotently) so the
+     * handover is complete even if the scheduler has not run yet.
+     */
+    private function showDate(CarbonImmutable $date): void
+    {
+        $this->date = $date->format('Y-m-d');
+
+        if ($date->isSameDay(OpsClock::today())) {
+            app(GenerateDailyInstances::class)->handle($date);
+        }
     }
 
     #[On('activity-updated')]
@@ -117,6 +139,7 @@ class HandoverCentre extends Component
             'outstanding' => $board->outstanding($day, $personId),
             'completed' => $board->completed($day, $personId),
             'journal' => $board->journal($day, $this->shift ?: null, $personId),
+            'journalLimit' => HandoverBoard::JOURNAL_LIMIT,
             'handovers' => Handover::query()
                 ->where('operational_date', $day->format('Y-m-d'))
                 ->with(['outgoingUser', 'incomingUser'])

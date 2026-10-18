@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\RecordActivityUpdate;
+use App\Actions\ScheduleActivityInstance;
 use App\Enums\ActivityStatus;
 use App\Enums\Recurrence;
 use App\Livewire\Activities\DailyRegister;
@@ -10,6 +11,7 @@ use App\Livewire\Dashboard;
 use App\Models\ActivityDefinition;
 use App\Models\ActivityInstance;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -177,5 +179,56 @@ class DailyRegisterTest extends TestCase
         Livewire::actingAs($this->support())
             ->test(Dashboard::class)
             ->assertViewHas('metrics', fn ($m) => $m['expected'] === 3 && $m['done'] === 1 && $m['pending'] === 1 && $m['not_updated'] === 1 && $m['updated'] === 2 && $m['updates'] === 3);
+    }
+
+    public function test_navigating_back_to_today_generates_todays_instances(): void
+    {
+        $this->freezeAt('2026-10-14 06:00:00');
+
+        $component = Livewire::actingAs($this->support())
+            ->withQueryParams(['date' => '2026-10-12'])
+            ->test(DailyRegister::class);
+
+        // A definition created after the page was opened is still picked up.
+        ActivityDefinition::factory()->create(['title' => 'Verification of service availability']);
+
+        $component->call('shiftDay', 2)->assertSet('date', '2026-10-14')->assertSee('Verification of service availability');
+        $this->assertSame(1, ActivityInstance::count());
+    }
+
+    public function test_cancelling_the_update_form_closes_the_panel(): void
+    {
+        $this->freezeAt('2026-10-14 10:00:00');
+        $instance = $this->activityInstance(['title' => 'Review of application error logs', 'recurrence' => Recurrence::AdHoc]);
+
+        Livewire::actingAs($this->support())
+            ->test(DailyRegister::class)
+            ->call('select', $instance->id)
+            ->assertSet('selected', $instance->id)
+            ->dispatch('update-form-cancelled')
+            ->assertSet('selected', null);
+    }
+
+    public function test_scheduling_problems_are_shown_beside_the_form(): void
+    {
+        $this->freezeAt('2026-10-14 10:00:00');
+        $definition = ActivityDefinition::factory()->create(['recurrence' => Recurrence::AdHoc]);
+        $supervisor = $this->supervisor();
+
+        $register = Livewire::actingAs($supervisor)->test(DailyRegister::class)
+            ->set('scheduleDefinition', (string) $definition->id)
+            ->call('schedule')
+            ->assertHasNoErrors();
+
+        // Scheduling the same activity twice on one date is refused with a visible message.
+        $register->set('scheduling', true)
+            ->set('scheduleDefinition', (string) $definition->id)
+            ->call('schedule')
+            ->assertHasErrors('scheduleDefinition')
+            ->assertSee('is already on the register for 14 Oct 2026');
+
+        // The action itself refuses past dates, whatever screen calls it.
+        $this->expectException(ValidationException::class);
+        app(ScheduleActivityInstance::class)->handle($definition, '2026-10-13', null, $supervisor);
     }
 }

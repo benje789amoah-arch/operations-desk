@@ -56,15 +56,9 @@ class DailyRegister extends Component
 
     public string $scheduleAssignee = '';
 
-    public function mount(GenerateDailyInstances $generator): void
+    public function mount(): void
     {
-        $this->date = OpsClock::safeDate($this->date ?: null)->format('Y-m-d');
-
-        // Generation is idempotent, so opening today's register is a safe
-        // fallback if the scheduler has not run yet.
-        if ($this->day()->isSameDay(OpsClock::today())) {
-            $generator->handle($this->day());
-        }
+        $this->showDate(OpsClock::safeDate($this->date ?: null), keepSelection: true);
     }
 
     public function day(): CarbonImmutable
@@ -74,29 +68,41 @@ class DailyRegister extends Component
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['search', 'state', 'category', 'person', 'date'], true)) {
+        if (in_array($property, ['search', 'state', 'category', 'person'], true)) {
             $this->resetPage();
         }
 
         if ($property === 'date') {
-            $this->date = $this->day()->format('Y-m-d');
-            $this->selected = null;
+            $this->showDate($this->day());
         }
     }
 
     public function shiftDay(int $days): void
     {
-        $this->date = $this->day()->addDays($days)->format('Y-m-d');
-        $this->selected = null;
-        $this->resetPage();
+        $this->showDate($this->day()->addDays($days));
     }
 
-    public function goToToday(GenerateDailyInstances $generator): void
+    public function goToToday(): void
     {
-        $this->date = OpsClock::today()->format('Y-m-d');
-        $generator->handle(OpsClock::today());
-        $this->selected = null;
-        $this->resetPage();
+        $this->showDate(OpsClock::today());
+    }
+
+    /**
+     * Switch the register to a date. Generation is idempotent, so opening
+     * today's register is a safe fallback if the scheduler has not run yet.
+     */
+    private function showDate(CarbonImmutable $date, bool $keepSelection = false): void
+    {
+        $this->date = $date->format('Y-m-d');
+
+        if ($date->isSameDay(OpsClock::today())) {
+            app(GenerateDailyInstances::class)->handle($date);
+        }
+
+        if (! $keepSelection) {
+            $this->selected = null;
+            $this->resetPage();
+        }
     }
 
     public function resetFilters(): void
@@ -110,6 +116,7 @@ class DailyRegister extends Component
         $this->selected = $id;
     }
 
+    #[On('update-form-cancelled')]
     public function closePanel(): void
     {
         $this->selected = null;
@@ -131,12 +138,6 @@ class DailyRegister extends Component
         ], [
             'scheduleDefinition.required' => 'Choose the activity to schedule.',
         ]);
-
-        if ($this->day()->lessThan(OpsClock::today())) {
-            $this->addError('scheduleDefinition', 'Activities can only be scheduled for today or a future date.');
-
-            return;
-        }
 
         $instance = $action->handle(
             ActivityDefinition::findOrFail($this->scheduleDefinition),

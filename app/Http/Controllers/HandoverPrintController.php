@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\HandoverBoard;
 use App\Support\OpsClock;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -18,9 +19,15 @@ class HandoverPrintController extends Controller
 {
     public function __invoke(Request $request, HandoverBoard $board): View
     {
-        $date = OpsClock::safeDate($request->query('date'));
-        $personId = $request->integer('person') ?: null;
-        $shift = array_key_exists((string) $request->query('shift'), config('operations.shifts')) ? $request->query('shift') : null;
+        $input = $request->validate([
+            'date' => ['nullable', 'date_format:Y-m-d'],
+            'shift' => ['nullable', Rule::in(array_keys(config('operations.shifts')))],
+            'person' => ['nullable', 'integer'],
+        ]);
+
+        $date = OpsClock::safeDate($input['date'] ?? null);
+        $personId = isset($input['person']) ? (int) $input['person'] : null;
+        $shift = $input['shift'] ?? null;
 
         return view('handover.print', [
             'date' => $date,

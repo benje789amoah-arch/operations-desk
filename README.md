@@ -6,6 +6,8 @@ An internal web application for an Applications Support team. It records the dai
 
 Built with Laravel 13, Livewire 4, Tailwind CSS 4 and Alpine.js. The database is the only source of truth.
 
+Also in this repository: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** (production deployment, backup and restore) and **[docs/REVIEW.md](docs/REVIEW.md)** (the final pre-submission review: findings, fixes and how each assessment criterion is met).
+
 ---
 
 ## Contents
@@ -67,6 +69,9 @@ Key decisions:
 - **Time.** All timestamps are stored in UTC. The team's timezone (`OPERATIONS_TIMEZONE`, default `Africa/Accra`) defines "today", operational dates, report day boundaries and display. See `app/Support/OpsClock.php`.
 - **Reports query history, not today's state.** "Status at close of day" and "status at cutoff" use the last update recorded before that moment.
 - **Tamper-evident audit log.** Each audit event stores a SHA-256 hash of its content chained to the previous event's hash. Administrators can verify the chain in the UI or with `php artisan operations:verify-audit-chain`.
+- **Sessions follow the account.** `auth.session` signs out every other session when a password is changed or reset. A deactivated account is refused on its next request, including Livewire requests from a page that is already open.
+- **Defensive HTTP.** Every response carries a Content-Security-Policy (own origin only, no framing), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` and, over HTTPS, HSTS. Query-string inputs are validated before use.
+- **Operable in production.** Each request gets an `X-Request-Id` header, and the same id (plus the user id) is attached to every log line written during that request. A misconfigured timezone or shift stops the app from starting with a precise message, and `php artisan operations:check` verifies the whole installation.
 
 ### Technology versions (as installed)
 
@@ -217,6 +222,12 @@ php artisan operations:verify-audit-chain
 
 Verifies the audit log's hash chain and exits non-zero if it is broken.
 
+```bash
+php artisan operations:check
+```
+
+Checks the installation: operations settings, application key, debug mode, built assets, database connection, pending migrations, an active administrator and audit-log integrity, plus HTTPS, secure cookies and mail in production. Exits non-zero if anything fails; run it after every deployment.
+
 ---
 
 ## 7. Business rules and definitions
@@ -307,6 +318,8 @@ The demo seeder replays about three weeks of fictional history **through the rea
 
 To start without demo data, run `php artisan migrate`, then `php artisan operations:create-admin`.
 
+**Emails in local development.** `.env.example` uses `MAIL_MAILER=log`, so password-reset and new-account links are not sent; they are written to `storage/logs/laravel.log`. Open that file to follow a link while testing.
+
 ---
 
 ## 9. Automated tests
@@ -343,7 +356,9 @@ php artisan test -c phpunit.pgsql.xml
 
 Both configurations default to `127.0.0.1` on the standard port, user `root` (MySQL) or `postgres` (PostgreSQL) with no password, and database `ops_desk_test`. Setting `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` or `DB_PASSWORD` in the environment overrides them. Never point them at a database you need: the suite drops every table in it.
 
-**Latest runs (18 October 2026): 132 tests, 530 assertions, all passing on each driver** (PHPUnit 12.5):
+**Latest run after the final review (18 October 2026): 142 tests, 565 assertions, all passing on SQLite** (PHPUnit 12.5, about 45 s).
+
+Before the final review, the then-complete suite (132 tests, 530 assertions) passed on each driver:
 
 | Driver | Server | Duration |
 |---|---|---|
@@ -351,7 +366,7 @@ Both configurations default to `127.0.0.1` on the standard port, user `root` (My
 | MySQL | 8.4.11 LTS, server time zone +03:00 | about 65 s |
 | PostgreSQL | 17.11, server time zone America/New_York | about 80 s |
 
-The servers were deliberately run outside UTC to show that nothing depends on the database server's time zone. The suite covers:
+The 10 tests added in the final review cover middleware, input validation, configuration checks and register navigation. None of them involves driver-specific SQL. The servers were deliberately run outside UTC to show that nothing depends on the database server's time zone. The suite covers:
 
 | Area | File |
 |---|---|
@@ -361,7 +376,8 @@ The servers were deliberately run outside UTC to show that nothing depends on th
 | Daily/weekday/weekly/monthly/ad-hoc rules, idempotency, DB unique constraint, history not reset, archived or out-of-range skipped, console backfill, timezone boundaries | `tests/Feature/InstanceGenerationTest.php` |
 | Updater identity and bio snapshot, server timestamps, locked properties, validation, pending ≠ done, preserved remarks, reopening, stale/concurrent updates, double submission, **transaction rollback on failure**, future-date rule, append-only updates | `tests/Feature/RecordActivityUpdateTest.php` |
 | Definition create, validation, edit audit diff, archive keeps history, case-insensitive search and filters | `tests/Feature/ActivityDefinitionTest.php` |
-| Register counts and filters, not updated vs pending, case-insensitive search, malformed filters in the address, untimed activities after timed ones, navigation, lazy generation, empty states, dashboard metric rules | `tests/Feature/DailyRegisterTest.php` |
+| Register counts and filters, not updated vs pending, case-insensitive search, malformed filters in the address, untimed activities after timed ones, navigation (including generating today's entries when navigating back to today), lazy generation, cancel closes the panel, scheduling errors shown on the form, empty states, dashboard metric rules | `tests/Feature/DailyRegisterTest.php` |
+| Other sessions signed out after a password change, tampered query strings rejected instead of crashing, Content-Security-Policy and request-id headers, configuration validation, `operations:check` | `tests/Feature/HardeningTest.php` |
 | Outstanding sorting and carry-over window, latest and earlier remarks, personnel filter, submit and acknowledge workflow, one handover per shift, printable summary | `tests/Feature/HandoverTest.php` |
 | Range validation, status at close vs current, filters narrowing the query, history date bases, pending at cutoff, personnel counts, trend, empty state, CSV filtering, CSV formula escaping, audit of exports | `tests/Feature/ReportTest.php` |
 | Hash chain, tamper detection (edit and delete), immutability, filtering and inspection, export permission | `tests/Feature/AuditLogTest.php` |
@@ -415,6 +431,7 @@ Where the assignment did not specify a rule, these choices were made:
 - **Remaining collation differences.** With its default collation, MySQL compares text ignoring case and accents, while PostgreSQL and SQLite compare it exactly. Emails and searches are normalised for this. Other unique values (staff numbers, activity codes) still ignore case on MySQL only, and only MySQL searches ignore accents.
 - **The first audit event has no row to lock.** On PostgreSQL, two events written at the same moment into an *empty* audit log could both start the chain. Once the log has one event, writers are serialised.
 - **Optimistic locking is the concurrency guard.** `lockForUpdate()` adds row locks on MySQL and PostgreSQL; on SQLite it is a no-op, and the version check alone prevents lost updates.
+- **The Content-Security-Policy allows `'unsafe-inline'` and `'unsafe-eval'` scripts.** Livewire's bundled Alpine.js evaluates directive expressions, so a nonce-only policy is not possible without switching Livewire to its CSP-safe build. The policy still blocks every other origin, plugins, framing and foreign form targets. Set `SECURITY_CSP=false` only if assets are served from a CDN and you need to adapt it.
 - **The audit hash chain is tamper-evident, not tamper-proof.** Someone with database write access could rebuild the chain. Restrict database access and keep off-site backups.
 - **No PDF export.** Reports and the handover summary have print stylesheets for "Print to PDF" in the browser; a server-side PDF library was not added.
 - **No email, SMS or in-app notifications** for flagged items or pending acknowledgements. The sidebar shows real counts (outstanding today, handovers awaiting acknowledgement).
