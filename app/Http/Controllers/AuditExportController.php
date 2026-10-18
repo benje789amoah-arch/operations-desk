@@ -18,7 +18,7 @@ class AuditExportController extends Controller
 
         return CsvWriter::download(
             'audit-log_'.now()->format('Ymd_His').'.csv',
-            [['Npontu Operations Desk', 'System audit log'], ['Prepared', ops_datetime(now(), true).' '.ops_tz().' by '.$request->user()->name]],
+            [['Operations Desk', 'System audit log'], ['Prepared', ops_datetime(now(), true).' '.ops_tz().' by '.$request->user()->name]],
             ['Event ID', 'Recorded at (UTC)', 'Actor', 'Event', 'Subject', 'Description', 'Changes', 'IP address', 'Hash', 'Previous hash'],
             function ($write) use ($filters) {
                 AuditLogQuery::build($filters)->chunk(500, fn ($events) => $events->each(fn ($event) => $write([

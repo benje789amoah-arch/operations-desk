@@ -27,8 +27,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ? $title.' · ' : '' }}Npontu Operations Desk</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23245c46'/%3E%3Cpath d='M9 23V9h3.2l6.6 9.1V9H22v14h-3.1l-6.7-9.2V23z' fill='white'/%3E%3C/svg%3E">
+    <title>{{ $title ? $title.' · ' : '' }}Operations Desk</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23245c46'/%3E%3Ctext x='16' y='21.5' text-anchor='middle' font-family='Times New Roman,Times,serif' font-size='15' font-weight='700' fill='white'%3EOD%3C/text%3E%3C/svg%3E">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
@@ -44,10 +44,10 @@
            :class="navOpen ? 'translate-x-0 shadow-[var(--shadow-sheet)]' : '-translate-x-full lg:translate-x-0'"
            aria-label="Main navigation">
         <div class="flex h-14 shrink-0 items-center gap-2.5 border-b border-hairline bg-surface px-4">
-            <span class="grid size-8 place-items-center rounded-md bg-forest text-[15px] font-bold text-white" aria-hidden="true">N</span>
+            <span class="grid size-8 place-items-center rounded-md bg-forest text-[14px] font-bold text-white" aria-hidden="true">OD</span>
             <span class="leading-tight">
-                <span class="block text-[13.5px] font-semibold tracking-tight">Npontu</span>
-                <span class="block font-mono text-[10.5px] uppercase tracking-[0.12em] text-slate">Operations Desk</span>
+                <span class="block text-[14px] font-semibold tracking-tight">Operations Desk</span>
+                <span class="block font-mono text-[10.5px] uppercase tracking-[0.12em] text-slate">Applications Support</span>
             </span>
             <button type="button" class="btn btn-ghost btn-sm ml-auto lg:hidden" @click="navOpen = false" aria-label="Close navigation">
                 <x-lucide-x class="size-4" />

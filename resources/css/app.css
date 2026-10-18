@@ -1,21 +1,24 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/inter';
-@import '@fontsource-variable/jetbrains-mono';
 
 @source '../views/**/*.blade.php';
 @source '../../app/**/*.php';
 
 /*
 |--------------------------------------------------------------------------
-| Npontu Operations Desk design tokens
+| Operations Desk design tokens
 |--------------------------------------------------------------------------
 | Warm near-white canvas, deep ink text, forest green for actions and
 | completed work, restrained amber for pending work, muted red for critical
 | states. Status is never conveyed by colour alone: every chip has a label.
+|
+| Typeface: Times New Roman everywhere, including the "mono" style used for
+| references and times. Liberation Serif / Tinos are metric-compatible
+| fallbacks for Linux machines without Times New Roman installed.
 */
 @theme {
-    --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-    --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Mono', 'Consolas', monospace;
+    --font-sans: 'Times New Roman', Times, 'Liberation Serif', Tinos, serif;
+    --font-serif: 'Times New Roman', Times, 'Liberation Serif', Tinos, serif;
+    --font-mono: 'Times New Roman', Times, 'Liberation Serif', Tinos, serif;
 
     --color-canvas: #f6f7f5;
     --color-surface: #ffffff;
@@ -67,7 +70,9 @@
 
     body {
         @apply bg-canvas text-ink font-sans text-[13.5px] leading-[1.45];
-        font-feature-settings: 'cv11', 'ss01';
+        /* Times New Roman has a small x-height; scale it so the sizes chosen
+           for the interface stay as readable as before. */
+        font-size-adjust: 0.5;
     }
 
     :focus-visible {

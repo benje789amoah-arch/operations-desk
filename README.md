@@ -1,8 +1,8 @@
-# Npontu Operations Desk
+# Operations Desk
 
 **Applications Support · Daily Operations & Handover**
 
-An internal web application for the Npontu Technologies Applications Support team. It records the daily support checks (such as *"Daily SMS count in comparison to SMS count from logs"*), who updated each one, what they found and when, and turns that history into a clear shift handover and custom-period reports.
+An internal web application for an Applications Support team. It records the daily support checks (such as *"Daily SMS count in comparison to SMS count from logs"*), who updated each one, what they found and when, and turns that history into a clear shift handover and custom-period reports.
 
 Built with Laravel 13, Livewire 4, Tailwind CSS 4 and Alpine.js. The database is the only source of truth.
 
@@ -79,7 +79,7 @@ Key decisions:
 | Build | vite / laravel-vite-plugin | 8.3 / 3.2 |
 | Charts | chart.js (lazy-loaded on the trend report only) | 4.5 |
 | Icons | mallardduck/blade-lucide-icons (Lucide) | 2.0 |
-| Fonts | @fontsource-variable/inter, jetbrains-mono (self-hosted) | 5.3 |
+| Typeface | Times New Roman throughout (system font; falls back to Liberation Serif / Tinos / serif) | — |
 | Tests | phpunit/phpunit | 12.5 |
 | Database | MySQL 8 / PostgreSQL 14+ in production; SQLite for local and tests | — |
 

@@ -1,4 +1,4 @@
-# Deploying Npontu Operations Desk
+# Deploying Operations Desk
 
 This guide follows Laravel's documented deployment conventions for a single Linux server running Nginx and PHP-FPM. Adapt the paths and service names to your host. **Never** serve the project root or expose `.env`; the web server's document root must be the `public/` directory.
 
@@ -72,7 +72,7 @@ php artisan key:generate
 Edit `.env`. The important production values:
 
 ```dotenv
-APP_NAME="Npontu Operations Desk"
+APP_NAME="Operations Desk"
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://ops-desk.example.com

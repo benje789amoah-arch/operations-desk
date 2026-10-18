@@ -121,7 +121,7 @@
         {{-- Applied filters (also printed) --}}
         <section class="panel mb-4 px-4 py-3" aria-label="Applied filters">
             <div class="flex flex-wrap items-baseline gap-x-6 gap-y-1.5 text-[12.5px]">
-                <p class="print-only w-full text-[15px] font-semibold">Npontu Operations Desk · {{ $report->title() }}</p>
+                <p class="print-only w-full text-[15px] font-semibold">Operations Desk · {{ $report->title() }}</p>
                 @foreach ($filters->describe() as $label => $value)
                     <p><span class="text-slate">{{ $label }}:</span> <span class="font-medium">{{ $value }}</span></p>
                 @endforeach

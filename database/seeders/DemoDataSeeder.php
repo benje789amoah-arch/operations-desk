@@ -28,7 +28,7 @@ use Illuminate\Support\Carbon;
  * DEMONSTRATION DATA — for local development and assessment only.
  *
  * People, remarks and figures below are fictional. They do not describe real
- * Npontu operations, and the application has not verified any real service,
+ * company operations, and the application has not verified any real service,
  * log or transaction.
  *
  * History is replayed chronologically through the real business actions

@@ -7,8 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="robots" content="noindex, nofollow">
-    <title>{{ $title ? $title.' · ' : '' }}Npontu Operations Desk</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23245c46'/%3E%3Cpath d='M9 23V9h3.2l6.6 9.1V9H22v14h-3.1l-6.7-9.2V23z' fill='white'/%3E%3C/svg%3E">
+    <title>{{ $title ? $title.' · ' : '' }}Operations Desk</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23245c46'/%3E%3Ctext x='16' y='21.5' text-anchor='middle' font-family='Times New Roman,Times,serif' font-size='15' font-weight='700' fill='white'%3EOD%3C/text%3E%3C/svg%3E">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
@@ -16,10 +16,10 @@
     <div class="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
         <aside class="relative hidden overflow-hidden bg-ink p-10 text-white lg:flex lg:flex-col lg:justify-between" aria-hidden="true">
             <div class="flex items-center gap-2.5">
-                <span class="grid size-9 place-items-center rounded-md bg-forest text-[16px] font-bold">N</span>
+                <span class="grid size-9 place-items-center rounded-md bg-forest text-[15px] font-bold">OD</span>
                 <span class="leading-tight">
-                    <span class="block text-[14px] font-semibold">Npontu</span>
-                    <span class="block font-mono text-[10.5px] uppercase tracking-[0.12em] text-white/60">Operations Desk</span>
+                    <span class="block text-[15px] font-semibold">Operations Desk</span>
+                    <span class="block font-mono text-[10.5px] uppercase tracking-[0.12em] text-white/60">Applications Support</span>
                 </span>
             </div>
 
@@ -45,10 +45,10 @@
         <main class="flex items-center justify-center px-4 py-10 sm:px-8">
             <div class="w-full max-w-[400px]">
                 <div class="mb-8 flex items-center gap-2.5 lg:hidden">
-                    <span class="grid size-9 place-items-center rounded-md bg-forest text-[16px] font-bold text-white">N</span>
+                    <span class="grid size-9 place-items-center rounded-md bg-forest text-[15px] font-bold text-white">OD</span>
                     <span class="leading-tight">
-                        <span class="block text-[14px] font-semibold">Npontu</span>
-                        <span class="block font-mono text-[10.5px] uppercase tracking-[0.12em] text-slate">Operations Desk</span>
+                        <span class="block text-[15px] font-semibold">Operations Desk</span>
+                        <span class="block font-mono text-[10.5px] uppercase tracking-[0.12em] text-slate">Applications Support</span>
                     </span>
                 </div>
                 {{ $slot }}

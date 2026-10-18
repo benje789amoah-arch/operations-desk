@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>Handover summary · {{ $date->format('d M Y') }} · Npontu Operations Desk</title>
+    <title>Handover summary · {{ $date->format('d M Y') }} · Operations Desk</title>
     @vite(['resources/css/app.css'])
     <style>
         body { background: #fff; }
@@ -28,7 +28,7 @@
 
         <header class="flex items-start justify-between gap-6 border-b-2 border-ink pb-3">
             <div>
-                <p class="font-mono text-[11px] uppercase tracking-[0.12em] text-slate">Npontu Operations Desk · Applications Support</p>
+                <p class="font-mono text-[11px] uppercase tracking-[0.12em] text-slate">Operations Desk · Applications Support</p>
                 <h1 class="mt-1 text-[22px] font-semibold">Handover summary — {{ $date->format('l, j F Y') }}</h1>
                 <p class="mt-1 text-[12.5px]">
                     Reporting period: operational date {{ $date->format('d M Y') }} (00:00–24:00 {{ ops_tz() }})

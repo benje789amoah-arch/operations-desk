@@ -2,7 +2,7 @@
 
 /*
 |--------------------------------------------------------------------------
-| Npontu Operations Desk
+| Operations Desk
 |--------------------------------------------------------------------------
 |
 | Operational rules for the Applications Support desk. Timestamps are always

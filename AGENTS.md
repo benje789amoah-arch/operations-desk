@@ -1,4 +1,4 @@
-# Working on Npontu Operations Desk
+# Working on Operations Desk
 
 Laravel 13 + Livewire 4 (class-based components) + Tailwind CSS 4. Read `README.md` first: it documents the domain, the business rules and the permission matrix.
 

@@ -26,7 +26,7 @@ class ReportExportController extends Controller
         );
 
         $preamble = [
-            ['Npontu Operations Desk', $report->title()],
+            ['Operations Desk', $report->title()],
             ['Prepared', ops_datetime(now(), true).' '.ops_tz().' by '.$request->user()->name],
             ...collect($filters->describe())->map(fn ($value, $label) => [$label, $value])->values()->all(),
         ];
