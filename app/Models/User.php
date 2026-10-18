@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Role;
+use App\Notifications\SetPasswordNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -46,6 +47,16 @@ class User extends Authenticatable
     protected function email(): Attribute
     {
         return Attribute::make(set: fn (string $value) => Str::lower(trim($value)));
+    }
+
+    /**
+     * Used for new-account invitations and forgotten passwords alike.
+     *
+     * @param  string  $token
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new SetPasswordNotification($token));
     }
 
     public function activityUpdates(): HasMany

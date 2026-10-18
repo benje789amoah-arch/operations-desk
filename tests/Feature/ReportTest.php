@@ -3,8 +3,11 @@
 namespace Tests\Feature;
 
 use App\Actions\RecordActivityUpdate;
+use App\Actions\ScheduleActivityInstance;
 use App\Enums\ActivityStatus;
+use App\Enums\Recurrence;
 use App\Livewire\Reports\ReportCentre;
+use App\Models\ActivityDefinition;
 use App\Models\ActivityInstance;
 use App\Models\User;
 use App\Reports\ActivityHistoryReport;
@@ -209,5 +212,17 @@ class ReportTest extends TestCase
         $this->actingAs($this->abena)
             ->get(route('reports.export', ['type' => 'daily', 'from' => '2026-10-14', 'to' => '2026-10-01']))
             ->assertSessionHasErrors('to');
+    }
+
+    public function test_activities_scheduled_after_the_cutoff_are_not_counted_as_pending(): void
+    {
+        $definition = ActivityDefinition::factory()->create(['recurrence' => Recurrence::AdHoc]);
+        app(ScheduleActivityInstance::class)->handle($definition, '2026-10-16', null, $this->abena);
+        $this->freezeAt('2026-10-14 16:00:00');
+
+        $report = app(PendingActivitiesReport::class);
+        $rows = $report->results($this->filters('pending', '2026-10-13', '2026-10-20'))->get();
+
+        $this->assertSame([$this->sms14->id], $rows->pluck('id')->all());
     }
 }

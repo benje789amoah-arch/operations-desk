@@ -2,7 +2,27 @@
 
 A final review of Operations Desk against the assignment's assessment criteria (logic, code clarity, UI innovation, requirement interpretation and non-functional requirements), carried out on 18 October 2026. It lists what was checked, what was found and fixed, and what remains open.
 
-**Result:** all 142 automated tests pass (565 assertions); `vendor/bin/pint --test` passes; `php artisan operations:check` reports every check OK on the seeded local installation; and the main screens were exercised in a real browser with the Content-Security-Policy active, with no policy violations and no horizontal overflow at phone width.
+**Result:** after two review passes, all 147 automated tests pass (580 assertions) and `vendor/bin/pint --test` passes. `php artisan operations:check` reports every check OK on the seeded local installation. The main screens were exercised in a real browser with the Content-Security-Policy active: no policy violations, no console errors and no horizontal overflow at phone width.
+
+---
+
+## 0. Second pass: flaws found and fixed
+
+Each flaw was first reproduced with a throwaway test, then fixed and covered by a permanent regression test.
+
+| # | Severity | Flaw | Fix | Regression test |
+|---|---|---|---|---|
+| A | Medium (data quality) | Livewire bypasses Laravel's whitespace trimming. A remark of nine spaces plus "x" passed the 10-character minimum and was saved as "x". Titles, names and handover notes had the same gap. | Remarks, supporting details, handover notes, definition titles and personnel fields are trimmed before validation. | `RecordActivityUpdateTest::test_padding_cannot_satisfy_the_minimum_remark_length` |
+| B | Medium (report accuracy) | The pending report counted an ad-hoc activity scheduled for a later date as "pending at cutoff", with negative days outstanding, whenever the range extended past today. | Activities dated after the cutoff are excluded (and the rule is stated in the report's notes). | `ReportTest::test_activities_scheduled_after_the_cutoff_are_not_counted_as_pending` |
+| C | Medium (security) | The dashboard's once-a-minute auto-refresh counted as activity, so an unattended screen's session never expired. | Refreshes only while the page is visible and someone has used it within the session lifetime; after that it stops, so the idle session times out. | Checked in the browser: refresh requests while active, none once idle. |
+| D | Low (integrity) | A handover could be back-dated to any past date, attaching a snapshot of today's state to it. | Handovers can be submitted for today or yesterday only (a shift may end after midnight); the form explains this for older dates. | `HandoverTest::test_handovers_can_only_be_submitted_for_today_or_yesterday` |
+| E | Low | Ad-hoc scheduling assigned the definition's default owner even if that account was deactivated (daily generation already skipped them). | Uses the same active-owner rule as daily generation. | `DailyRegisterTest::test_ad_hoc_scheduling_does_not_assign_a_deactivated_default_owner` |
+| F | Low (robustness) | Two people scheduling the same activity, or submitting the same shift's handover, at the same moment hit the database's unique constraint and got a server error. | The constraint violation is turned into the normal "already scheduled / already submitted" message. | — (race; covered by the unique constraints) |
+| G | Low (UX) | New staff received Laravel's default email, "You are receiving this email because we received a password reset request", which reads wrongly for an invitation. | A neutral "Set your Operations Desk password" email that suits both invitations and resets. | `PasswordTest::test_the_password_email_reads_correctly_for_new_accounts_and_resets` |
+| H | Low (accessibility) | On phones, keyboard focus could move behind the open navigation drawer and the register's slide-over panel. | Focus is trapped inside both while they cover the page, and returns to the menu button on close. | Checked in the browser at 375 px. |
+| I | Low (UX) | On phones, the register's card list showed only the time of a last update, even when it was on an earlier day. | Shows the date when the update was not today, as the desktop table already did. | — |
+
+Probed and found sound: tampered address parameters on every Livewire page (all handled without errors), SQL ordering inputs (whitelisted), output escaping (no unescaped Blade output anywhere), authorization on every component action, and unique-key handling for daily generation.
 
 ---
 
@@ -64,5 +84,7 @@ A final review of Operations Desk against the assignment's assessment criteria (
 ## 4. Open items (not fixable within this repository)
 
 1. **Live deployment.** The assignment asks for the system to be deployed. The application is ready, and `docs/DEPLOYMENT.md` gives the steps and a checklist, but it needs a server or hosting account, a domain and TLS, which only the owner can provide.
-2. **The latest 10 tests were run on SQLite only.** The earlier suite (132 tests) passed on MySQL 8.4 and PostgreSQL 17. The new tests involve no driver-specific SQL, but re-running them on the production engine before go-live is recommended.
-3. The limitations in README section 12 still apply: no server-side PDF export, no notifications, no correction workflow, a tamper-evident (not tamper-proof) audit chain, and the CSP allowing inline and eval scripts as Livewire/Alpine require.
+2. **The 15 tests added in the review were run on SQLite only.** The earlier suite (132 tests) passed on MySQL 8.4 and PostgreSQL 17. The new tests involve no driver-specific SQL, but re-running the suite on the production engine before go-live is recommended.
+3. **Password links last 60 minutes, for invitations as well as resets.** A new person who misses the window must use "Forgot password?" or ask an administrator to resend from their personnel page. A separate, longer-lived invitation link was not added.
+4. **Demo data depends on when it is seeded.** Nothing is created in the future, so a seed run early in the morning leaves today mostly "not updated". Re-run `php artisan migrate:fresh --seed` shortly before a demonstration.
+5. The limitations in README section 12 still apply: no server-side PDF export, no notifications, no correction workflow, a tamper-evident (not tamper-proof) audit chain, and the CSP allowing inline and eval scripts as Livewire/Alpine require.

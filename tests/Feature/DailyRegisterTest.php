@@ -10,6 +10,7 @@ use App\Livewire\Activities\DailyRegister;
 use App\Livewire\Dashboard;
 use App\Models\ActivityDefinition;
 use App\Models\ActivityInstance;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
@@ -230,5 +231,16 @@ class DailyRegisterTest extends TestCase
         // The action itself refuses past dates, whatever screen calls it.
         $this->expectException(ValidationException::class);
         app(ScheduleActivityInstance::class)->handle($definition, '2026-10-13', null, $supervisor);
+    }
+
+    public function test_ad_hoc_scheduling_does_not_assign_a_deactivated_default_owner(): void
+    {
+        $this->freezeAt('2026-10-14 10:00:00');
+        $leaver = User::factory()->inactive()->create();
+        $definition = ActivityDefinition::factory()->create(['recurrence' => Recurrence::AdHoc, 'default_assignee_id' => $leaver->id]);
+
+        $instance = app(ScheduleActivityInstance::class)->handle($definition, '2026-10-14', null, $this->supervisor());
+
+        $this->assertNull($instance->assigned_to);
     }
 }

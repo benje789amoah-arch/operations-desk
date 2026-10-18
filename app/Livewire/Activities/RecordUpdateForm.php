@@ -89,6 +89,11 @@ class RecordUpdateForm extends Component
     {
         $instance = $this->instance;
         $this->authorize('recordUpdate', $instance);
+
+        // Livewire skips Laravel's TrimStrings middleware, so trim here:
+        // otherwise padding could satisfy the minimum remark length.
+        $this->remark = trim($this->remark);
+        $this->supportingDetails = trim($this->supportingDetails);
         $this->validate();
 
         try {

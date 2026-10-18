@@ -99,6 +99,7 @@ class HandoverCentre extends Component
     {
         $this->authorize(Ability::SUBMIT_HANDOVER);
 
+        $this->handoverNote = trim($this->handoverNote); // Livewire skips TrimStrings
         $this->validate([
             'handoverShift' => ['required', Rule::in(array_keys(config('operations.shifts')))],
             'handoverNote' => ['required', 'string', 'min:15', 'max:3000'],
@@ -135,6 +136,7 @@ class HandoverCentre extends Component
             'day' => $day,
             'isToday' => $day->isSameDay(OpsClock::today()),
             'isFuture' => $day->greaterThan(OpsClock::today()),
+            'canSubmitForDay' => ! $day->greaterThan(OpsClock::today()) && ! $day->lessThan(OpsClock::today()->subDay()),
             'counts' => $board->counts($day),
             'outstanding' => $board->outstanding($day, $personId),
             'completed' => $board->completed($day, $personId),

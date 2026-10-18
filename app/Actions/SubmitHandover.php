@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\HandoverBoard;
 use App\Support\OpsClock;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -29,19 +30,34 @@ class SubmitHandover
             throw ValidationException::withMessages(['handoverDate' => 'You cannot submit a handover for a future date.']);
         }
 
-        if (Handover::query()->where('operational_date', $day->format('Y-m-d'))->where('shift', $shift)->exists()) {
-            throw ValidationException::withMessages(['handoverShift' => 'A handover has already been submitted for this shift. Ask the incoming person to acknowledge it.']);
+        // The snapshot records the state now, so only allow the current
+        // operational date or the previous one (a shift can end after midnight).
+        if ($day->lessThan(OpsClock::today()->subDay())) {
+            throw ValidationException::withMessages(['handoverDate' => 'Handovers can only be submitted for today or yesterday.']);
         }
 
-        return DB::transaction(function () use ($day, $shift, $note, $outgoing) {
-            $handover = Handover::create([
-                'operational_date' => $day->format('Y-m-d'),
-                'shift' => $shift,
-                'outgoing_user_id' => $outgoing->id,
-                'outgoing_note' => trim($note),
-                'submitted_at' => now(),
-                'snapshot' => $this->board->snapshot($day),
-            ]);
+        $alreadySubmitted = ValidationException::withMessages([
+            'handoverShift' => 'A handover has already been submitted for this shift. Ask the incoming person to acknowledge it.',
+        ]);
+
+        if (Handover::query()->where('operational_date', $day->format('Y-m-d'))->where('shift', $shift)->exists()) {
+            throw $alreadySubmitted;
+        }
+
+        return DB::transaction(function () use ($day, $shift, $note, $outgoing, $alreadySubmitted) {
+            try {
+                $handover = Handover::create([
+                    'operational_date' => $day->format('Y-m-d'),
+                    'shift' => $shift,
+                    'outgoing_user_id' => $outgoing->id,
+                    'outgoing_note' => trim($note),
+                    'submitted_at' => now(),
+                    'snapshot' => $this->board->snapshot($day),
+                ]);
+            } catch (UniqueConstraintViolationException) {
+                // Two people submitted the same shift at the same moment.
+                throw $alreadySubmitted;
+            }
 
             $this->audit->record(
                 event: 'handover.submitted',

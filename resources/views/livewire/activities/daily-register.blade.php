@@ -224,7 +224,7 @@
                                 </div>
                                 @if ($instance->latestUpdate)
                                     <p class="mt-2 line-clamp-2 text-[12.5px] text-ink-soft">{{ $instance->latestUpdate->remark }}</p>
-                                    <p class="mt-1 text-[11.5px] text-slate">{{ $instance->latestUpdate->updater_name }} · <span class="font-mono">{{ ops_time($instance->latestUpdate->created_at) }}</span></p>
+                                    <p class="mt-1 text-[11.5px] text-slate">{{ $instance->latestUpdate->updater_name }} · <span class="font-mono">{{ ops_is_today($instance->latestUpdate->created_at) ? ops_time($instance->latestUpdate->created_at) : ops_format($instance->latestUpdate->created_at, 'd M H:i') }}</span></p>
                                 @else
                                     <p class="mt-2 text-[12px] italic text-slate">Awaiting first update · {{ $instance->assignee?->name ?? 'Unassigned' }}</p>
                                 @endif
@@ -242,7 +242,9 @@
             <div class="fixed inset-0 z-40 bg-ink/30 xl:hidden" wire:click="closePanel" aria-hidden="true"></div>
             <aside wire:key="panel-{{ $selectedInstance->id }}"
                    class="fixed inset-y-0 right-0 z-50 w-full max-w-[440px] overflow-y-auto border-l border-hairline bg-surface shadow-[var(--shadow-sheet)] animate-slide-in xl:static xl:z-auto xl:max-w-none xl:self-start xl:rounded-lg xl:border xl:shadow-none"
-                   aria-label="Activity detail" x-data x-init="$el.focus()" tabindex="-1" @keydown.escape="$wire.closePanel()">
+                   aria-label="Activity detail" tabindex="-1" @keydown.escape="$wire.closePanel()"
+                   {{-- Below 1280px the panel covers the page, so keep keyboard focus inside it. --}}
+                   x-data="{ overlay: window.matchMedia('(max-width: 1279.98px)').matches }" x-init="$el.focus()" x-trap.noscroll="overlay">
                 <div class="sticky top-0 z-10 border-b border-hairline bg-[#f3f5f2] px-4 py-3">
                     <div class="flex items-start justify-between gap-2">
                         <div class="min-w-0">

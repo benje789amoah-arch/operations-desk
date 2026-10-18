@@ -6,7 +6,7 @@ use App\Enums\Role;
 use App\Livewire\Personnel\PersonnelForm;
 use App\Livewire\Personnel\PersonnelIndex;
 use App\Models\User;
-use Illuminate\Auth\Notifications\ResetPassword;
+use App\Notifications\SetPasswordNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
@@ -34,7 +34,7 @@ class PersonnelTest extends TestCase
         $user = User::query()->where('email', 'yaw.darko@example.com')->sole();
         $this->assertSame(Role::Support, $user->role);
         $this->assertTrue($user->is_active);
-        Notification::assertSentTo($user, ResetPassword::class);
+        Notification::assertSentTo($user, SetPasswordNotification::class);
         $this->assertDatabaseHas('audit_events', ['event' => 'personnel.created', 'subject_id' => $user->id]);
     }
 

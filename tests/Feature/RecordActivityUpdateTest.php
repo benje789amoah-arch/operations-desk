@@ -273,4 +273,19 @@ class RecordActivityUpdateTest extends TestCase
         $this->assertSame('Applications Support Analyst', $update->updater_designation);
         $this->assertNotSame('Renamed Person', $update->updater_name);
     }
+
+    public function test_padding_cannot_satisfy_the_minimum_remark_length(): void
+    {
+        $this->freezeAt('2026-10-14 10:00:00');
+        $instance = $this->activityInstance();
+
+        Livewire::actingAs($this->support())
+            ->test(RecordUpdateForm::class, ['instance' => $instance])
+            ->set('status', 'done')
+            ->set('remark', '         x')
+            ->call('save')
+            ->assertHasErrors(['remark' => 'min']);
+
+        $this->assertSame(0, ActivityUpdate::count());
+    }
 }

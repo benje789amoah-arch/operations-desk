@@ -76,6 +76,10 @@ class PersonnelForm extends Component
 
         // Stored emails are lower case (see User::email()), so the unique rule must compare lower case too.
         $this->email = Str::lower(trim($this->email));
+        // Livewire skips TrimStrings, so trim the free-text fields here.
+        foreach (['name', 'staff_number', 'designation', 'team'] as $field) {
+            $this->{$field} = trim($this->{$field});
+        }
         $data = $this->validate();
         $data['staff_number'] = $data['staff_number'] ?: null;
         $data['designation'] = $data['designation'] ?: null;

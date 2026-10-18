@@ -4,7 +4,8 @@
     $maxTrend = max(1, $trend->max('total'));
 @endphp
 
-<div wire:poll.visible.60s>
+{{-- Refreshes every minute while someone is using the page; pauses when idle so the session can still time out. --}}
+<div x-data="deskRefresh({{ (int) config('session.lifetime') }})">
     {{-- Greeting and operational period --}}
     <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
@@ -15,7 +16,7 @@
                 @if ($shift)
                     <span class="flex items-center gap-1.5"><x-lucide-clock class="size-4" /> {{ $shift['label'] }} ({{ $shift['start'] }}–{{ $shift['end'] }} {{ ops_tz() }})</span>
                 @endif
-                <span class="flex items-center gap-1.5" title="This page refreshes itself every minute while it is visible"><x-lucide-refresh-cw class="size-3.5" /> Refreshed {{ ops_time(now()) }}</span>
+                <span class="flex items-center gap-1.5" title="Refreshes every minute while you are using the page; pauses when you are away"><x-lucide-refresh-cw class="size-3.5" /> Refreshed {{ ops_time(now()) }}</span>
             </p>
         </div>
         <div class="flex flex-wrap gap-2">

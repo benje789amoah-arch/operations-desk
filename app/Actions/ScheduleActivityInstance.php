@@ -7,6 +7,7 @@ use App\Models\ActivityInstance;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Support\OpsClock;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -31,19 +32,31 @@ class ScheduleActivityInstance
             throw ValidationException::withMessages(['scheduleDefinition' => 'Activities can only be scheduled for today or a future date.']);
         }
 
+        $alreadyScheduled = ValidationException::withMessages([
+            'scheduleDefinition' => sprintf('%s is already on the register for %s.', $definition->code, $day->format('d M Y')),
+        ]);
+
         if (ActivityInstance::query()->where('activity_definition_id', $definition->id)->onDate($day)->exists()) {
-            throw ValidationException::withMessages(['scheduleDefinition' => sprintf('%s is already on the register for %s.', $definition->code, $day->format('d M Y'))]);
+            throw $alreadyScheduled;
         }
 
-        return DB::transaction(function () use ($definition, $day, $assignee, $actor) {
-            $instance = ActivityInstance::create([
-                ...GenerateDailyInstances::attributesFor($definition, $day),
-                'activity_definition_id' => $definition->id,
-                'operational_date' => $day->format('Y-m-d'),
-                'assigned_to' => $assignee?->id ?? $definition->default_assignee_id,
-                'origin' => ActivityInstance::ORIGIN_MANUAL,
-                'created_by' => $actor->id,
-            ]);
+        return DB::transaction(function () use ($definition, $day, $assignee, $actor, $alreadyScheduled) {
+            $attributes = GenerateDailyInstances::attributesFor($definition, $day);
+
+            try {
+                $instance = ActivityInstance::create([
+                    ...$attributes,
+                    'activity_definition_id' => $definition->id,
+                    'operational_date' => $day->format('Y-m-d'),
+                    // The default owner is only used while their account is active.
+                    'assigned_to' => $assignee?->id ?? $attributes['assigned_to'],
+                    'origin' => ActivityInstance::ORIGIN_MANUAL,
+                    'created_by' => $actor->id,
+                ]);
+            } catch (UniqueConstraintViolationException) {
+                // Someone scheduled it (or the scheduler created it) a moment ago.
+                throw $alreadyScheduled;
+            }
 
             $this->audit->record(
                 event: 'activity.instance_scheduled',

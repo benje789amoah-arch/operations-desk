@@ -34,7 +34,7 @@ class PendingActivitiesReport extends Report
     {
         return [
             'The reporting cutoff is the end of the selected end date, or the current time if the end date is today or later.',
-            'An activity counts as pending if its last update before the cutoff set it to Pending, or if it had not been updated at all by then.',
+            'An activity counts as pending if its last update before the cutoff set it to Pending, or if it had not been updated at all by then. Activities scheduled for a date after the cutoff are not yet due and are not counted.',
             'Remarks, updater and times are those of the last update before the cutoff, so later work does not rewrite the picture at that time.',
             '"Since cutoff" shows whether the activity has been completed after the cutoff.',
         ];
@@ -137,6 +137,8 @@ class PendingActivitiesReport extends Report
         $query = $this->instancesInPeriod($filters)
             // Instances created after the cutoff were not on the register at that time.
             ->where('activity_instances.created_at', '<', $cutoff)
+            // Work scheduled for a later date is not yet due, so it cannot be pending.
+            ->where('activity_instances.operational_date', '<=', OpsClock::local($cutoff)->format('Y-m-d'))
             // No update before the cutoff counts as pending ("not updated").
             ->whereRaw("coalesce(({$status->toSql()}), 'pending') = 'pending'", $status->getBindings());
 

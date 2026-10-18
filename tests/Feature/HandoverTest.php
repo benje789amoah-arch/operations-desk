@@ -137,4 +137,28 @@ class HandoverTest extends TestCase
             ->assertDontSee('data-app-sidebar', false)
             ->assertDontSee('Main navigation');
     }
+
+    public function test_handovers_can_only_be_submitted_for_today_or_yesterday(): void
+    {
+        $this->freezeAt('2026-10-14 00:20:00');
+        $user = $this->support();
+
+        // Just after midnight, the evening shift that ended at 00:00 is handed over for yesterday.
+        Livewire::actingAs($user)->test(HandoverCentre::class)
+            ->set('date', '2026-10-13')
+            ->set('handoverShift', 'evening')
+            ->set('handoverNote', 'Evening shift handover, submitted just after midnight.')
+            ->call('submit')
+            ->assertHasNoErrors();
+
+        Livewire::actingAs($user)->test(HandoverCentre::class)
+            ->set('date', '2026-10-10')
+            ->assertSee('Handovers can only be submitted for today or yesterday')
+            ->set('handoverShift', 'morning')
+            ->set('handoverNote', 'An attempt to back-date a handover by several days.')
+            ->call('submit')
+            ->assertHasErrors('handoverDate');
+
+        $this->assertSame(1, Handover::count());
+    }
 }

@@ -3,7 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\AuditEvent;
-use Illuminate\Auth\Notifications\ResetPassword;
+use App\Notifications\SetPasswordNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
@@ -20,7 +20,7 @@ class PasswordTest extends TestCase
 
         $this->post('/forgot-password', ['email' => $user->email])->assertSessionHas('status');
 
-        Notification::assertSentTo($user, ResetPassword::class);
+        Notification::assertSentTo($user, SetPasswordNotification::class);
     }
 
     public function test_unknown_addresses_get_the_same_response_and_no_email(): void
@@ -38,7 +38,7 @@ class PasswordTest extends TestCase
         $user = $this->support();
         $this->post('/forgot-password', ['email' => $user->email]);
 
-        Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use ($user) {
+        Notification::assertSentTo($user, SetPasswordNotification::class, function (SetPasswordNotification $notification) use ($user) {
             $this->get('/reset-password/'.$notification->token.'?email='.$user->email)->assertOk();
 
             $this->post('/reset-password', [
@@ -109,5 +109,15 @@ class PasswordTest extends TestCase
 
         $this->assertArrayNotHasKey('password', $user->toArray());
         $this->assertArrayNotHasKey('remember_token', $user->toArray());
+    }
+
+    public function test_the_password_email_reads_correctly_for_new_accounts_and_resets(): void
+    {
+        $user = $this->support();
+        $mail = (new SetPasswordNotification('token-123'))->toMail($user);
+
+        $this->assertSame('Set your '.config('app.name').' password', $mail->subject);
+        $this->assertSame('Choose a password', $mail->actionText);
+        $this->assertStringNotContainsString('received a password reset request', implode(' ', $mail->introLines));
     }
 }

@@ -23,6 +23,36 @@ document.addEventListener('alpine:init', () => {
         },
     })
 
+    /*
+     * Refresh a Livewire component every minute, but only while the page is
+     * visible and someone has used it recently. A plain wire:poll would keep
+     * an unattended screen's session alive for ever; this lets the idle
+     * session expire as configured (SESSION_LIFETIME minutes).
+     */
+    Alpine.data('deskRefresh', (sessionMinutes = 120, everySeconds = 60) => ({
+        lastActivity: Date.now(),
+        timer: null,
+        onActivity: null,
+        init() {
+            this.onActivity = () => (this.lastActivity = Date.now())
+            ;['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart'].forEach((type) =>
+                window.addEventListener(type, this.onActivity, { passive: true }),
+            )
+            const idleLimit = Math.max(1, sessionMinutes - 5) * 60 * 1000
+            this.timer = setInterval(() => {
+                if (document.visibilityState === 'visible' && Date.now() - this.lastActivity < idleLimit) {
+                    this.$wire.$refresh()
+                }
+            }, everySeconds * 1000)
+        },
+        destroy() {
+            clearInterval(this.timer)
+            ;['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart'].forEach((type) =>
+                window.removeEventListener(type, this.onActivity),
+            )
+        },
+    }))
+
     Alpine.data('trendChart', (series) => ({
         chart: null,
         async init() {

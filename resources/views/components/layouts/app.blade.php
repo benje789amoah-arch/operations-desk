@@ -42,6 +42,7 @@
     <aside data-app-sidebar
            class="fixed inset-y-0 left-0 z-50 flex w-[256px] flex-col border-r border-hairline bg-[#f0f2ef] transition-transform duration-200 lg:translate-x-0"
            :class="navOpen ? 'translate-x-0 shadow-[var(--shadow-sheet)]' : '-translate-x-full lg:translate-x-0'"
+           x-trap.noscroll="navOpen"
            aria-label="Main navigation">
         <div class="flex h-14 shrink-0 items-center gap-2.5 border-b border-hairline bg-surface px-4">
             <span class="grid size-8 place-items-center rounded-md bg-forest text-[14px] font-bold text-white" aria-hidden="true">OD</span>

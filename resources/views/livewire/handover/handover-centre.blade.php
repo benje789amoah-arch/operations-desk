@@ -247,7 +247,10 @@
                 @endif
 
                 @can(Ability::SUBMIT_HANDOVER)
-                    @unless ($isFuture)
+                    @if (! $canSubmitForDay && ! $isFuture)
+                        <p class="border-t border-hairline p-4 text-[12.5px] text-slate">Handovers can only be submitted for today or yesterday, because the attached snapshot records the state at the moment of submission.</p>
+                    @endif
+                    @if ($canSubmitForDay)
                         <form wire:submit="submit" class="space-y-3 border-t border-hairline p-4">
                             <h3 class="text-[13px] font-medium">Submit your handover</h3>
                             <div>
@@ -269,7 +272,7 @@
                                 <span wire:loading wire:target="submit" class="flex items-center gap-2"><x-lucide-loader-circle class="size-4 animate-spin" /> Submitting…</span>
                             </button>
                         </form>
-                    @endunless
+                    @endif
                 @endcan
             </section>
         </aside>

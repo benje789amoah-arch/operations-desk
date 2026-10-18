@@ -39,6 +39,8 @@ class DefinitionForm extends Component
         $definition = $this->definition();
         $definition ? $this->authorize('update', $definition) : $this->authorize('create', ActivityDefinition::class);
 
+        // Livewire skips TrimStrings, so padding cannot satisfy the minimum title length.
+        $this->form->title = trim($this->form->title);
         $this->form->validate();
 
         $saved = $action->handle($definition, $this->form->toAttributes(), auth()->user());

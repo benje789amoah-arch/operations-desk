@@ -356,7 +356,7 @@ php artisan test -c phpunit.pgsql.xml
 
 Both configurations default to `127.0.0.1` on the standard port, user `root` (MySQL) or `postgres` (PostgreSQL) with no password, and database `ops_desk_test`. Setting `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` or `DB_PASSWORD` in the environment overrides them. Never point them at a database you need: the suite drops every table in it.
 
-**Latest run after the final review (18 October 2026): 142 tests, 565 assertions, all passing on SQLite** (PHPUnit 12.5, about 45 s).
+**Latest run after the final review (18 October 2026): 147 tests, 580 assertions, all passing on SQLite** (PHPUnit 12.5, about 50 s).
 
 Before the final review, the then-complete suite (132 tests, 530 assertions) passed on each driver:
 
@@ -366,7 +366,7 @@ Before the final review, the then-complete suite (132 tests, 530 assertions) pas
 | MySQL | 8.4.11 LTS, server time zone +03:00 | about 65 s |
 | PostgreSQL | 17.11, server time zone America/New_York | about 80 s |
 
-The 10 tests added in the final review cover middleware, input validation, configuration checks and register navigation. None of them involves driver-specific SQL. The servers were deliberately run outside UTC to show that nothing depends on the database server's time zone. The suite covers:
+The 15 tests added in the final review cover middleware, input validation, configuration checks, register navigation, handover dates, scheduling, remark trimming, the password email and one report condition (a plain date comparison). None of them involves driver-specific SQL. The servers were deliberately run outside UTC to show that nothing depends on the database server's time zone. The suite covers:
 
 | Area | File |
 |---|---|
