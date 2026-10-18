@@ -107,6 +107,19 @@ class ActivityInstance extends Model
     }
 
     /**
+     * Timed activities by scheduled time, then those without one. The null
+     * placement is spelled out because databases disagree on it (PostgreSQL
+     * sorts NULLs last, MySQL and SQLite first).
+     *
+     * @param  Builder<ActivityInstance>  $query
+     */
+    public function scopeInScheduleOrder(Builder $query): void
+    {
+        $query->orderByRaw('case when activity_instances.scheduled_at is null then 1 else 0 end')
+            ->orderBy('activity_instances.scheduled_at');
+    }
+
+    /**
      * Eager loads needed by every list that shows an instance row.
      *
      * @param  Builder<ActivityInstance>  $query

@@ -120,5 +120,14 @@ class ActivityDefinitionTest extends TestCase
             ->assertDontSee('Legacy SMS gateway check')
             ->set('status', 'archived')
             ->assertSee('Legacy SMS gateway check');
+
+        Livewire::actingAs($this->support())
+            ->test(DefinitionIndex::class)
+            ->set('search', 'sms count')
+            ->assertSee('Daily SMS count in comparison')
+            ->assertDontSee('Verification of scheduled application jobs')
+            ->set('search', '')
+            ->set('category', 'abc')
+            ->assertDontSee('Verification of scheduled application jobs');
     }
 }

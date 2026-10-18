@@ -102,7 +102,7 @@ class AuditLogger
         return DB::transaction(function () use ($actor, $event, $description, $subject, $subjectLabel, $properties) {
             // Serialise writers on databases that support row locks so two
             // concurrent events cannot both chain to the same predecessor.
-            $previous = AuditEvent::query()->orderByDesc('id')->lockForUpdate()->first(['id', 'hash']);
+            $previous = $this->lockChainHead();
             $request = app()->runningInConsole() ? null : request();
 
             $attributes = [
@@ -124,6 +124,28 @@ class AuditLogger
 
             return AuditEvent::create($attributes);
         });
+    }
+
+    /**
+     * Lock the newest event: the one the next event chains to.
+     *
+     * Under PostgreSQL's READ COMMITTED isolation, a locking read that had to
+     * wait for another writer returns the row it found before waiting, which
+     * is no longer the newest once that writer commits. So read again until
+     * the locked row is still the newest. MySQL locking reads already see the
+     * newest committed row and SQLite has a single writer, so there the
+     * second read simply confirms the first.
+     */
+    private function lockChainHead(): ?AuditEvent
+    {
+        $head = null;
+
+        do {
+            $locked = $head;
+            $head = AuditEvent::query()->orderByDesc('id')->lockForUpdate()->first(['id', 'hash']);
+        } while ($head?->id !== $locked?->id);
+
+        return $head;
     }
 
     /**

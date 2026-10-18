@@ -9,6 +9,7 @@ use App\Models\AuditEvent;
 use App\Models\User;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -73,6 +74,8 @@ class PersonnelForm extends Component
         $person = $this->person();
         $person ? $this->authorize('update', $person) : $this->authorize('create', User::class);
 
+        // Stored emails are lower case (see User::email()), so the unique rule must compare lower case too.
+        $this->email = Str::lower(trim($this->email));
         $data = $this->validate();
         $data['staff_number'] = $data['staff_number'] ?: null;
         $data['designation'] = $data['designation'] ?: null;

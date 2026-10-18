@@ -38,11 +38,11 @@ class AuditLogQuery
                 ? $q->whereNull('actor_id')
                 : $q->where('actor_id', (int) $filters['actor']))
             ->when($search !== '', fn (Builder $q) => $q->where(fn (Builder $inner) => $inner
-                ->where('description', 'like', '%'.$search.'%')
-                ->orWhere('subject_label', 'like', '%'.$search.'%')
-                ->orWhere('actor_name', 'like', '%'.$search.'%')
-                ->orWhere('event', 'like', '%'.$search.'%')
-                ->orWhere('ip_address', 'like', '%'.$search.'%')))
+                ->whereLike('description', '%'.$search.'%')
+                ->orWhereLike('subject_label', '%'.$search.'%')
+                ->orWhereLike('actor_name', '%'.$search.'%')
+                ->orWhereLike('event', '%'.$search.'%')
+                ->orWhereLike('ip_address', '%'.$search.'%')))
             ->orderByDesc('id');
     }
 }

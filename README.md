@@ -315,21 +315,57 @@ To start without demo data, run `php artisan migrate`, then `php artisan operati
 php artisan test
 ```
 
-Tests run against in-memory SQLite. **Latest run: 126 tests, 506 assertions, all passing** (PHPUnit 12.5, about 20 seconds). The suite covers:
+The default configuration (`phpunit.xml`) runs against in-memory SQLite. Two more configurations run the same suite against MySQL and PostgreSQL. Each needs an empty database called `ops_desk_test`; the tests migrate it themselves.
+
+Create the MySQL test database:
+
+```bash
+mysql -u root -e "CREATE DATABASE ops_desk_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+```
+
+Run the suite against MySQL:
+
+```bash
+php artisan test -c phpunit.mysql.xml
+```
+
+Create the PostgreSQL test database:
+
+```bash
+createdb -U postgres ops_desk_test
+```
+
+Run the suite against PostgreSQL:
+
+```bash
+php artisan test -c phpunit.pgsql.xml
+```
+
+Both configurations default to `127.0.0.1` on the standard port, user `root` (MySQL) or `postgres` (PostgreSQL) with no password, and database `ops_desk_test`. Setting `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` or `DB_PASSWORD` in the environment overrides them. Never point them at a database you need: the suite drops every table in it.
+
+**Latest runs (18 October 2026): 132 tests, 530 assertions, all passing on each driver** (PHPUnit 12.5):
+
+| Driver | Server | Duration |
+|---|---|---|
+| SQLite, in memory | bundled with PHP 8.3 | about 55 s |
+| MySQL | 8.4.11 LTS, server time zone +03:00 | about 65 s |
+| PostgreSQL | 17.11, server time zone America/New_York | about 80 s |
+
+The servers were deliberately run outside UTC to show that nothing depends on the database server's time zone. The suite covers:
 
 | Area | File |
 |---|---|
-| Sign-in, sign-out, wrong password, deactivated accounts, rate limiting and lockout auditing, guest redirects, registration disabled, mid-session deactivation | `tests/Feature/Auth/AuthenticationTest.php` |
+| Sign-in, case-insensitive email, sign-out, wrong password, deactivated accounts, rate limiting and lockout auditing, guest redirects, registration disabled, mid-session deactivation | `tests/Feature/Auth/AuthenticationTest.php` |
 | Reset link, no account enumeration, reset with token, password policy, change password, no secrets in audit or output | `tests/Feature/Auth/PasswordTest.php` |
 | Role access for every restricted page and action (routes and Livewire actions), CSV export permission, personnel-report scoping in the query | `tests/Feature/AuthorizationTest.php` |
 | Daily/weekday/weekly/monthly/ad-hoc rules, idempotency, DB unique constraint, history not reset, archived or out-of-range skipped, console backfill, timezone boundaries | `tests/Feature/InstanceGenerationTest.php` |
 | Updater identity and bio snapshot, server timestamps, locked properties, validation, pending ≠ done, preserved remarks, reopening, stale/concurrent updates, double submission, **transaction rollback on failure**, future-date rule, append-only updates | `tests/Feature/RecordActivityUpdateTest.php` |
-| Definition create, validation, edit audit diff, archive keeps history, search and filters | `tests/Feature/ActivityDefinitionTest.php` |
-| Register counts and filters, not updated vs pending, search, navigation, lazy generation, empty states, dashboard metric rules | `tests/Feature/DailyRegisterTest.php` |
+| Definition create, validation, edit audit diff, archive keeps history, case-insensitive search and filters | `tests/Feature/ActivityDefinitionTest.php` |
+| Register counts and filters, not updated vs pending, case-insensitive search, malformed filters in the address, untimed activities after timed ones, navigation, lazy generation, empty states, dashboard metric rules | `tests/Feature/DailyRegisterTest.php` |
 | Outstanding sorting and carry-over window, latest and earlier remarks, personnel filter, submit and acknowledge workflow, one handover per shift, printable summary | `tests/Feature/HandoverTest.php` |
 | Range validation, status at close vs current, filters narrowing the query, history date bases, pending at cutoff, personnel counts, trend, empty state, CSV filtering, CSV formula escaping, audit of exports | `tests/Feature/ReportTest.php` |
 | Hash chain, tamper detection (edit and delete), immutability, filtering and inspection, export permission | `tests/Feature/AuditLogTest.php` |
-| Account creation with invitation link, uniqueness, role-change audit, deactivation, self and last-admin protection | `tests/Feature/PersonnelTest.php` |
+| Account creation with invitation link, uniqueness (email ignoring case), case-insensitive search, role-change audit, deactivation, self and last-admin protection | `tests/Feature/PersonnelTest.php` |
 | Every page renders with the full demo dataset and with an empty database, 404 and 403 pages, security headers | `tests/Feature/PagesRenderTest.php` |
 | CSV sanitising, recurrence rules | `tests/Unit/SupportTest.php` |
 
@@ -361,13 +397,23 @@ Where the assignment did not specify a rule, these choices were made:
 10. **Default timezone is Africa/Accra (GMT, no daylight saving).** Change it with `OPERATIONS_TIMEZONE`.
 11. **Carry-over window is 7 days** (`OPERATIONS_CARRY_OVER_DAYS`). Older pending items remain on their own date and in the pending report.
 12. **Priority** (normal, high, critical) and **due times** were added to support the "Requires attention" rules. They are optional.
+13. **Email addresses are not case-sensitive.** They are stored in lower case, and sign-in and password resets accept any capitalisation.
 
 ---
 
 ## 12. Known limitations
 
 - **No live deployment.** Instructions are provided, but the app has not been deployed to a server or verified over HTTPS here.
-- **Developed and tested on SQLite.** The schema and queries use portable SQL (no driver-specific functions), and the migrations target MySQL 8 and PostgreSQL too, but the automated suite has only been executed on SQLite. Run it against your production engine before go-live.
+- **Tested on SQLite, MySQL 8.4 and PostgreSQL 17.** The full suite passes on all three (section 9). In addition, the demo data was seeded on each through `migrate:refresh --seed` (which also runs every `down()` migration). The audit chain verified on all three, and all five reports, in 15 filter combinations, gave identical summaries and rows on each. The MySQL and PostgreSQL runs found driver differences that the original suite did not cover. All are now fixed and have regression tests where a single connection can show them:
+  - PostgreSQL `LIKE` is case-sensitive. Searches now use `whereLike()`, which becomes `ILIKE` on PostgreSQL.
+  - Email matching was case-insensitive on MySQL only. Emails are now stored in lower case on every driver.
+  - On PostgreSQL, a non-numeric category or person ID in the address bar caused a server error. Those filters are now cast to integers.
+  - Activities without a scheduled time sorted first on MySQL and SQLite but last on PostgreSQL. They are now listed last everywhere, matching the handover centre.
+  - On PostgreSQL, two audit events written at the same moment could both chain to the same predecessor and break the chain. The writer now re-reads the newest event after taking the lock. This was reproduced and the fix confirmed with two concurrent processes.
+  - MySQL converts `TIMESTAMP` values from the session time zone. On a server not set to UTC, that stored instants offset from the UTC the app writes, and made `verifyChain()` report intact events as altered if the time zone changed. The MySQL connection now sets its session to UTC (`DB_TIMEZONE`, default `+00:00`).
+- **Not tested on MariaDB or on PostgreSQL 14–16.** Nothing used is version-specific, but run the suite against your exact production engine before go-live.
+- **Remaining collation differences.** With its default collation, MySQL compares text ignoring case and accents, while PostgreSQL and SQLite compare it exactly. Emails and searches are normalised for this. Other unique values (staff numbers, activity codes) still ignore case on MySQL only, and only MySQL searches ignore accents.
+- **The first audit event has no row to lock.** On PostgreSQL, two events written at the same moment into an *empty* audit log could both start the chain. Once the log has one event, writers are serialised.
 - **Optimistic locking is the concurrency guard.** `lockForUpdate()` adds row locks on MySQL and PostgreSQL; on SQLite it is a no-op, and the version check alone prevents lost updates.
 - **The audit hash chain is tamper-evident, not tamper-proof.** Someone with database write access could rebuild the chain. Restrict database access and keep off-site backups.
 - **No PDF export.** Reports and the handover summary have print stylesheets for "Print to PDF" in the browser; a server-side PDF library was not added.

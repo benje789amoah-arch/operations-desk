@@ -32,6 +32,16 @@ class AuthenticationTest extends TestCase
         $this->assertDatabaseHas('audit_events', ['event' => 'auth.login', 'actor_id' => $user->id]);
     }
 
+    public function test_the_email_address_is_not_case_sensitive_when_signing_in(): void
+    {
+        $user = $this->support(['email' => 'kwesi@example.com']);
+
+        $this->post('/login', ['email' => ' Kwesi@Example.COM ', 'password' => 'Password-2026'])
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticatedAs($user);
+    }
+
     public function test_wrong_password_is_rejected_with_a_clear_message(): void
     {
         $this->support(['email' => 'kwesi@example.com']);

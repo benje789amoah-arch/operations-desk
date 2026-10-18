@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\Role;
 use App\Livewire\Personnel\PersonnelForm;
+use App\Livewire\Personnel\PersonnelIndex;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -48,6 +49,34 @@ class PersonnelTest extends TestCase
             ->set('staff_number', 'NP-100')
             ->call('save')
             ->assertHasErrors(['email' => 'unique', 'staff_number' => 'unique']);
+    }
+
+    public function test_emails_are_stored_in_lower_case_so_uniqueness_ignores_case_on_every_database(): void
+    {
+        $this->support(['email' => 'Taken@Example.com']);
+        $this->assertDatabaseHas('users', ['email' => 'taken@example.com']);
+
+        Livewire::actingAs($this->admin())
+            ->test(PersonnelForm::class)
+            ->set('name', 'Duplicate Person')
+            ->set('email', 'TAKEN@example.com')
+            ->call('save')
+            ->assertHasErrors(['email' => 'unique']);
+    }
+
+    public function test_the_personnel_list_search_ignores_letter_case(): void
+    {
+        $this->support(['name' => 'Efua Asante', 'email' => 'efua.asante@example.com']);
+        $this->support(['name' => 'Kojo Antwi', 'email' => 'kojo.antwi@example.com']);
+
+        Livewire::actingAs($this->admin())
+            ->test(PersonnelIndex::class)
+            ->set('search', 'efua')
+            ->assertSee('Efua Asante')
+            ->assertDontSee('Kojo Antwi')
+            ->set('search', 'KOJO.ANTWI@')
+            ->assertSee('Kojo Antwi')
+            ->assertDontSee('Efua Asante');
     }
 
     public function test_role_changes_are_audited_with_before_and_after_values(): void

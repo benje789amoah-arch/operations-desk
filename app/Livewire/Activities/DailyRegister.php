@@ -171,18 +171,18 @@ class DailyRegister extends Component
             ->withRowContext()
             ->when($this->search !== '', fn (Builder $q) => $q->where(fn (Builder $inner) => $inner
                 ->whereHas('definition', fn (Builder $d) => $d
-                    ->where('title', 'like', '%'.$this->search.'%')
-                    ->orWhere('code', 'like', '%'.$this->search.'%')
-                    ->orWhere('description', 'like', '%'.$this->search.'%'))
-                ->orWhereHas('latestUpdate', fn (Builder $u) => $u->where('remark', 'like', '%'.$this->search.'%'))))
+                    ->whereLike('title', '%'.$this->search.'%')
+                    ->orWhereLike('code', '%'.$this->search.'%')
+                    ->orWhereLike('description', '%'.$this->search.'%'))
+                ->orWhereHas('latestUpdate', fn (Builder $u) => $u->whereLike('remark', '%'.$this->search.'%'))))
             ->when($this->state === 'done', fn (Builder $q) => $q->where('status', ActivityStatus::Done))
             ->when($this->state === 'pending', fn (Builder $q) => $q->where('status', ActivityStatus::Pending)->whereNotNull('latest_update_id'))
             ->when($this->state === 'not_updated', fn (Builder $q) => $q->whereNull('latest_update_id'))
             ->when($this->state === 'follow_up', fn (Builder $q) => $q->where('requires_follow_up', true)->where('status', ActivityStatus::Pending))
-            ->when($this->category !== '', fn (Builder $q) => $q->whereHas('definition', fn (Builder $d) => $d->where('category_id', $this->category)))
-            ->when($this->person !== '', fn (Builder $q) => $q->where('assigned_to', $this->person))
+            ->when($this->category !== '', fn (Builder $q) => $q->whereHas('definition', fn (Builder $d) => $d->where('category_id', (int) $this->category)))
+            ->when($this->person !== '', fn (Builder $q) => $q->where('assigned_to', (int) $this->person))
             ->orderByRaw('case when latest_update_id is null then 0 when status = ? then 1 else 2 end', [ActivityStatus::Pending->value])
-            ->orderBy('scheduled_at')
+            ->inScheduleOrder()
             ->orderBy('id')
             ->paginate(25);
 

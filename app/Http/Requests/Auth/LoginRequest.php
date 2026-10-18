@@ -34,6 +34,16 @@ class LoginRequest extends FormRequest
     }
 
     /**
+     * Stored emails are lower case (see User::email()).
+     */
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('email'))) {
+            $this->merge(['email' => Str::lower($this->input('email'))]);
+        }
+    }
+
+    /**
      * Attempt to authenticate. Inactive accounts are refused even with the
      * correct password, and every failure counts towards the lockout.
      *

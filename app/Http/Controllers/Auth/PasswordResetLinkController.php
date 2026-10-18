@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class PasswordResetLinkController extends Controller
@@ -24,10 +25,12 @@ class PasswordResetLinkController extends Controller
     {
         $request->validate(['email' => ['required', 'email', 'max:255']]);
 
-        $user = User::query()->where('email', $request->input('email'))->first();
+        // Stored emails are lower case (see User::email()).
+        $email = Str::lower($request->input('email'));
+        $user = User::query()->where('email', $email)->first();
 
         if ($user?->is_active) {
-            Password::broker()->sendResetLink($request->only('email'));
+            Password::broker()->sendResetLink(['email' => $email]);
         }
 
         return back()->with('status', 'If an active account uses that address, a reset link is on its way. The link expires in '.config('auth.passwords.users.expire').' minutes.');

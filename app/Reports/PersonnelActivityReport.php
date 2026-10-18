@@ -86,6 +86,7 @@ class PersonnelActivityReport extends Report
             ->selectRaw('max(activity_updates.created_at) as last_at')
             ->groupBy('activity_updates.user_id')
             ->orderByDesc('updates')
+            ->orderBy('activity_updates.user_id')
             ->get();
 
         $people = User::query()->whereIn('id', $rows->pluck('user_id'))->get()->keyBy('id');

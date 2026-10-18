@@ -77,7 +77,7 @@ class PendingActivitiesReport extends Report
             ->selectSub(StatusAt::updateIdBefore($this->cutoff($filters)), 'cutoff_update_id')
             ->withRowContext()
             ->orderBy('activity_instances.operational_date', $filters->order)
-            ->orderBy('activity_instances.scheduled_at')
+            ->inScheduleOrder()
             ->orderBy('activity_instances.id');
     }
 

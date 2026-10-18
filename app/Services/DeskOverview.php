@@ -59,7 +59,7 @@ class DeskOverview
         return ActivityInstance::query()
             ->onDate($today)
             ->withRowContext()
-            ->orderBy('scheduled_at')
+            ->inScheduleOrder()
             ->orderBy('id')
             ->get();
     }

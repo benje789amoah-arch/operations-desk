@@ -70,7 +70,7 @@ class DailyActivityReport extends Report
             ->withRowContext()
             ->with('latestUpdate')
             ->orderBy('activity_instances.operational_date', $filters->order)
-            ->orderBy('activity_instances.scheduled_at')
+            ->inScheduleOrder()
             ->orderBy('activity_instances.id');
 
         $this->applyCurrentState($query, $filters->status);

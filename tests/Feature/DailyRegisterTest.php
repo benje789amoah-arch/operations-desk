@@ -84,6 +84,44 @@ class DailyRegisterTest extends TestCase
             ->assertDontSee('Verification of service availability');
     }
 
+    public function test_search_ignores_letter_case_on_every_database(): void
+    {
+        $this->freezeAt('2026-10-14 12:00:00');
+        $this->threeStates();
+
+        Livewire::actingAs($this->support())
+            ->test(DailyRegister::class)
+            ->set('search', 'DATABASE BACKUP')
+            ->assertSee('Database backup completion check')
+            ->assertDontSee('Review of failed transaction records')
+            ->set('search', 'Escalated')
+            ->assertSee('Review of failed transaction records')
+            ->assertDontSee('Database backup completion check');
+    }
+
+    public function test_a_malformed_filter_in_the_address_matches_nothing_instead_of_failing(): void
+    {
+        $this->freezeAt('2026-10-14 12:00:00');
+        $this->threeStates();
+
+        Livewire::actingAs($this->support())
+            ->withQueryParams(['category' => 'abc', 'person' => 'abc'])
+            ->test(DailyRegister::class)
+            ->assertDontSee('Review of failed transaction records');
+    }
+
+    public function test_activities_without_a_scheduled_time_are_listed_after_timed_ones(): void
+    {
+        $this->freezeAt('2026-10-14 12:00:00');
+        $this->activityInstance(['title' => 'Untimed reconciliation review', 'scheduled_time' => null], '2026-10-14', ['scheduled_at' => null]);
+        $this->activityInstance(['title' => 'Timed availability check'], '2026-10-14');
+
+        Livewire::actingAs($this->support())
+            ->test(DailyRegister::class)
+            ->assertViewHas('instances', fn ($page) => $page->getCollection()->map(fn (ActivityInstance $i) => $i->definition->title)->all()
+                === ['Timed availability check', 'Untimed reconciliation review']);
+    }
+
     public function test_previous_and_next_day_navigation(): void
     {
         $this->freezeAt('2026-10-14 12:00:00');

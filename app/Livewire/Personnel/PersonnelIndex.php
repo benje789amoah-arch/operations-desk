@@ -43,9 +43,9 @@ class PersonnelIndex extends Component
         $people = User::query()
             ->withCount(['activityUpdates as updates_30d' => fn (Builder $q) => $q->where('created_at', '>=', $start)])
             ->when($this->search !== '', fn (Builder $q) => $q->where(fn (Builder $inner) => $inner
-                ->where('name', 'like', '%'.$this->search.'%')
-                ->orWhere('email', 'like', '%'.$this->search.'%')
-                ->orWhere('staff_number', 'like', '%'.$this->search.'%')))
+                ->whereLike('name', '%'.$this->search.'%')
+                ->orWhereLike('email', '%'.$this->search.'%')
+                ->orWhereLike('staff_number', '%'.$this->search.'%')))
             ->when($this->role !== '', fn (Builder $q) => $q->where('role', $this->role))
             ->when($this->status === 'active', fn (Builder $q) => $q->where('is_active', true))
             ->when($this->status === 'inactive', fn (Builder $q) => $q->where('is_active', false))

@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -35,6 +36,16 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Stored in lower case so sign-in, password resets and the unique rule
+     * ignore case on every database (MySQL compares case-insensitively,
+     * PostgreSQL and SQLite do not).
+     */
+    protected function email(): Attribute
+    {
+        return Attribute::make(set: fn (string $value) => Str::lower(trim($value)));
     }
 
     public function activityUpdates(): HasMany
