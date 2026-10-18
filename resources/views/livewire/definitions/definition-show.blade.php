@@ -6,11 +6,7 @@
             <div class="mt-2 flex flex-wrap items-center gap-2">
                 <span class="mono text-[12.5px] font-semibold">{{ $definition->code }}</span>
                 <x-ui.priority :priority="$definition->priority" />
-                @if ($definition->isArchived())
-                    <span class="chip chip-neutral"><x-lucide-archive class="size-3" /> Archived {{ ops_format($definition->archived_at, 'd M Y') }}</span>
-                @else
-                    <span class="chip chip-done"><x-lucide-circle-check class="size-3" /> Active</span>
-                @endif
+                <x-ui.lifecycle :definition="$definition" />
                 <span class="text-[12.5px] text-slate">{{ $definition->category?->name ?? 'Uncategorised' }}</span>
             </div>
         </x-slot:meta>
@@ -83,7 +79,12 @@
             <section class="panel p-4">
                 <h2 class="section-title">Next scheduled dates</h2>
                 @if ($upcoming->isEmpty())
-                    <p class="mt-2 text-[12.5px] text-slate">{{ $definition->isArchived() ? 'Archived definitions are not scheduled.' : ($definition->recurrence->value === 'adhoc' ? 'Ad-hoc: scheduled manually from the daily register.' : 'Not due in the next two weeks.') }}</p>
+                    <p class="mt-2 text-[12.5px] text-slate">{{ match (true) {
+                        $definition->isArchived() => 'Archived definitions are not scheduled.',
+                        $definition->lifecycle() === 'ended' => 'This definition ended on '.$definition->ends_on->format('d M Y').'. Edit its last operational date to schedule it again.',
+                        $definition->recurrence->value === 'adhoc' => 'Ad-hoc: scheduled manually from the daily register.',
+                        default => 'Not due in the next two weeks.',
+                    } }}</p>
                 @else
                     <ul class="mt-2 space-y-1 font-mono text-[12.5px]">
                         @foreach ($upcoming as $date)<li class="flex justify-between"><span>{{ $date->format('D d M Y') }}</span>@if ($loop->first && $date->isToday())<span class="chip chip-done">Today</span>@endif</li>@endforeach

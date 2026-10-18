@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Priority;
 use App\Enums\Recurrence;
+use App\Support\OpsClock;
 use Carbon\CarbonInterface;
 use Database\Factories\ActivityDefinitionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -88,6 +89,23 @@ class ActivityDefinition extends Model
     public function isArchived(): bool
     {
         return $this->archived_at !== null;
+    }
+
+    /**
+     * Where the definition is in its life, as of today's operational date:
+     * "archived", "ended" (past its last date), "upcoming" (before its first
+     * date) or "active".
+     */
+    public function lifecycle(): string
+    {
+        $today = OpsClock::today()->format('Y-m-d');
+
+        return match (true) {
+            $this->isArchived() => 'archived',
+            $this->ends_on !== null && $this->ends_on->format('Y-m-d') < $today => 'ended',
+            $this->starts_on->format('Y-m-d') > $today => 'upcoming',
+            default => 'active',
+        };
     }
 
     /**

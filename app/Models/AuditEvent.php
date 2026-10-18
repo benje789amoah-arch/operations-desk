@@ -37,14 +37,6 @@ class AuditEvent extends Model
     }
 
     /**
-     * The event family, e.g. "activity" for "activity.status_updated".
-     */
-    public function category(): string
-    {
-        return Str::before($this->event, '.');
-    }
-
-    /**
      * Visual tone used by the audit log: neutral, positive, attention or critical.
      */
     public function tone(): string

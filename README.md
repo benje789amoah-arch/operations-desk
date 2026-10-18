@@ -96,7 +96,7 @@ Key decisions:
 - Greeting, date, operational period and current shift, plus "Record activity" and "View handover" actions.
 - Expected today, completed (with progress bar), still pending (updated vs not yet updated) and updated today. Definitions are in [section 7](#7-business-rules-and-definitions).
 - *Requires attention*: pending work that is critical, flagged for follow-up, reopened, past its due time, or carried over from the last 7 days. Each item shows the reason chips, latest remark, updater and time.
-- Today's activity table with tabs (All / Not updated / Pending / Done), a 14-day completion strip and recent updates. The page refreshes itself every minute while visible.
+- Today's activity table with tabs (All / Not updated / Pending / Done), a 14-day completion strip and recent updates. The page refreshes every minute while someone is using it, and pauses when they are idle so the session can still time out.
 
 **Daily register** (`/daily-register`)
 - Date picker, previous and next day, "Today", search (title, code, latest remark), and filters for status (Not updated / Pending / Flagged / Done), category and responsible person. All filters are kept in the URL.
@@ -202,7 +202,7 @@ Additional rules: a deactivated account fails every ability; an administrator ca
 
 **Daily workflow:** at 00:01 local time the scheduler creates today's instances. The morning person opens the register, records each check (Done, or Pending with an explanation, optionally flagged for follow-up). Pending items carry into the next days' attention list. At shift end the outgoing person submits a handover note; the incoming person reviews the outstanding list with its remarks and acknowledges it. Managers run reports over any period and export CSVs.
 
-**Console commands**
+**Console commands** (classes in `app/Console/Commands`; the schedule is in `routes/console.php`)
 
 ```bash
 php artisan operations:generate-instances
@@ -356,7 +356,7 @@ php artisan test -c phpunit.pgsql.xml
 
 Both configurations default to `127.0.0.1` on the standard port, user `root` (MySQL) or `postgres` (PostgreSQL) with no password, and database `ops_desk_test`. Setting `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` or `DB_PASSWORD` in the environment overrides them. Never point them at a database you need: the suite drops every table in it.
 
-**Latest run after the final review (18 October 2026): 147 tests, 580 assertions, all passing on SQLite** (PHPUnit 12.5, about 50 s).
+**Latest run after the final review (18 October 2026): 155 tests, 614 assertions, all passing on SQLite** (PHPUnit 12.5, about 55 s).
 
 Before the final review, the then-complete suite (132 tests, 530 assertions) passed on each driver:
 
@@ -366,7 +366,7 @@ Before the final review, the then-complete suite (132 tests, 530 assertions) pas
 | MySQL | 8.4.11 LTS, server time zone +03:00 | about 65 s |
 | PostgreSQL | 17.11, server time zone America/New_York | about 80 s |
 
-The 15 tests added in the final review cover middleware, input validation, configuration checks, register navigation, handover dates, scheduling, remark trimming, the password email and one report condition (a plain date comparison). None of them involves driver-specific SQL. The servers were deliberately run outside UTC to show that nothing depends on the database server's time zone. The suite covers:
+The 23 tests added in the final review cover middleware, input validation, configuration checks, console commands, register navigation, handover dates, scheduling, remark trimming, the password email, definition lifecycle, error pages, timezone month boundaries and one report condition (a plain date comparison). None of them involves driver-specific SQL. The servers were deliberately run outside UTC to show that nothing depends on the database server's time zone. The suite covers:
 
 | Area | File |
 |---|---|
@@ -383,6 +383,7 @@ The 15 tests added in the final review cover middleware, input validation, confi
 | Hash chain, tamper detection (edit and delete), immutability, filtering and inspection, export permission | `tests/Feature/AuditLogTest.php` |
 | Account creation with invitation link, uniqueness (email ignoring case), case-insensitive search, role-change audit, deactivation, self and last-admin protection | `tests/Feature/PersonnelTest.php` |
 | Every page renders with the full demo dataset and with an empty database, 404 and 403 pages, security headers | `tests/Feature/PagesRenderTest.php` |
+| `operations:create-admin` (trimming, lower-case email, weak password, duplicates, password never echoed), `operations:verify-audit-chain`, the daily schedule | `tests/Feature/ConsoleCommandsTest.php` |
 | CSV sanitising, recurrence rules | `tests/Unit/SupportTest.php` |
 
 Formatting is checked with `vendor/bin/pint --test`.

@@ -1,12 +1,27 @@
 # Pre-submission review
 
-A final review of Operations Desk against the assignment's assessment criteria (logic, code clarity, UI innovation, requirement interpretation and non-functional requirements), carried out on 18 October 2026. It lists what was checked, what was found and fixed, and what remains open.
+Three review passes of Operations Desk against the assignment's assessment criteria (logic, code clarity, UI innovation, requirement interpretation and non-functional requirements), carried out on 18 October 2026. It lists what was checked, what was found and fixed, and what remains open.
 
-**Result:** after two review passes, all 147 automated tests pass (580 assertions) and `vendor/bin/pint --test` passes. `php artisan operations:check` reports every check OK on the seeded local installation. The main screens were exercised in a real browser with the Content-Security-Policy active: no policy violations, no console errors and no horizontal overflow at phone width.
+**Result:** after three review passes, all 155 automated tests pass (614 assertions), `vendor/bin/pint --test` passes and `composer validate` passes. `php artisan operations:check` reports every check OK on the seeded local installation. The main screens were exercised in a real browser with the Content-Security-Policy active: no policy violations, no console errors and no horizontal overflow at phone width.
 
 ---
 
-## 0. Second pass: flaws found and fixed
+## Third pass: flaws found and fixed
+
+| # | Severity | Flaw | Fix | Proof |
+|---|---|---|---|---|
+| J | Medium (maintenance/security) | Livewire was pinned to exactly `4.4` (the `^` was swallowed by the Windows command shell during installation). That blocked its bug-fix and security releases, and 4.4.0 was installed instead of the current 4.4.7. | Restored `^4.4` and updated to 4.4.7. | Full suite and browser checks pass on 4.4.7; `composer validate` passes. |
+| K | Medium (accessibility) | The dashboard and definitions filter buttons used `role="tab"` without tab panels or arrow-key support, so screen readers announced a tab interface that did not behave like one. | Plain toggle buttons with `aria-pressed` inside a labelled group. | `PagesRenderTest::test_filter_buttons_use_toggle_semantics_not_tab_roles` |
+| L | Low (correctness) | The profile's "Updates this month" started the month at UTC midnight instead of local midnight. This was the last place mixing UTC with the operational timezone. | Uses the operational timezone. | `PasswordTest::test_the_profile_counts_this_months_updates_in_the_operational_timezone` (UTC+3 boundary) |
+| M | Low (UX) | A definition past its last operational date was still labelled "Active"; one starting in the future looked the same. | Lifecycle chips (Active, Starts …, Ended …, Archived …) on the list and detail page, and an explanation in "Next scheduled dates". | `ActivityDefinitionTest::test_definitions_show_whether_they_are_active_upcoming_ended_or_archived` |
+| N | Low (code clarity) | The four console commands were long closures in `routes/console.php`; `operations:create-admin` and `operations:verify-audit-chain` had no tests. | Moved to small command classes in `app/Console/Commands`; `routes/console.php` now only holds the schedule. | `ConsoleCommandsTest` (4 tests) |
+| O | Low (code clarity) | Dead code: an unused date helper, two unused enum helpers, an unused model method, and an authorization policy method that was defined but never called. | Removed the dead code; the scheduling policy is now enforced when scheduling ad-hoc activities. | Suite passes. |
+| P | Low (UX) | Opening a form-only address directly (for example `/logout`) showed an unstyled framework error page. | Added a styled 405 page. | `PagesRenderTest::test_opening_a_form_only_address_shows_a_friendly_page` |
+| Q | Low (docs) | The README still described the dashboard as refreshing "while visible", and `composer.json` still carried the Laravel skeleton's name and description. | Updated both. | — |
+
+---
+
+## Second pass: flaws found and fixed
 
 Each flaw was first reproduced with a throwaway test, then fixed and covered by a permanent regression test.
 
@@ -26,7 +41,7 @@ Probed and found sound: tampered address parameters on every Livewire page (all 
 
 ---
 
-## 1. Findings fixed in this review
+## First pass: findings fixed
 
 | # | Severity | Finding | Fix | Proof |
 |---|---|---|---|---|
@@ -40,14 +55,14 @@ Probed and found sound: tampered address parameters on every Livewire page (all 
 | 8 | Low (UX) | The handover journal silently stopped at 200 updates. | It now says when the limit is reached and points to the history report for the full list. | Visible in the handover centre. |
 | 9 | Low | `operations:create-admin` checked email uniqueness before lower-casing it. | It now lower-cases first, matching how emails are stored. | — |
 
-## 2. Non-functional additions made in this review
+## Non-functional additions (first pass)
 
 - **Configuration validation.** An invalid `OPERATIONS_TIMEZONE`, carry-over window, report range or shift definition stops the application from starting, with a message naming the setting (`App\Support\OperationsConfig`). Without this, a wrong timezone would silently put work on the wrong operational date.
 - **`php artisan operations:check`.** One command verifies the installation: settings, application key, debug mode, built assets, database, pending migrations, an active administrator and audit-log integrity, plus HTTPS, secure cookies and mail in production. It exits non-zero on failure and is part of the deployment steps and checklist.
 - **Structured logging context.** Every request gets an `X-Request-Id`. The same id and the user id are attached to every log line written during the request, so a reported problem can be traced.
 - **Content-Security-Policy.** The app's own origin only; no plugins, framing or foreign form targets (configurable with `SECURITY_CSP`). Verified in the browser across the dashboard, register (including Alpine-driven behaviour), trend chart (lazy-loaded) and print pages.
 
-## 3. Review against the assessment criteria
+## Review against the assessment criteria
 
 **Logic.** The core rules each live in one place and are tested at their boundaries:
 - Instance generation is idempotent and uses a unique key.
@@ -81,10 +96,11 @@ Probed and found sound: tampered address parameters on every Livewire page (all 
 - **Accessibility:** labelled controls, text alongside colour, focus styles, reduced motion.
 - **Maintainability:** conventions in `AGENTS.md`, plus deployment, backup and restore documentation.
 
-## 4. Open items (not fixable within this repository)
+## Open items
 
 1. **Live deployment.** The assignment asks for the system to be deployed. The application is ready, and `docs/DEPLOYMENT.md` gives the steps and a checklist, but it needs a server or hosting account, a domain and TLS, which only the owner can provide.
-2. **The 15 tests added in the review were run on SQLite only.** The earlier suite (132 tests) passed on MySQL 8.4 and PostgreSQL 17. The new tests involve no driver-specific SQL, but re-running the suite on the production engine before go-live is recommended.
+2. **The 23 tests added in the review, and the Livewire 4.4.7 update, were run on SQLite only.** The earlier suite (132 tests) passed on MySQL 8.4 and PostgreSQL 17. The new tests involve no driver-specific SQL, but re-running the suite on the production engine before go-live is recommended.
 3. **Password links last 60 minutes, for invitations as well as resets.** A new person who misses the window must use "Forgot password?" or ask an administrator to resend from their personnel page. A separate, longer-lived invitation link was not added.
-4. **Demo data depends on when it is seeded.** Nothing is created in the future, so a seed run early in the morning leaves today mostly "not updated". Re-run `php artisan migrate:fresh --seed` shortly before a demonstration.
-5. The limitations in README section 12 still apply: no server-side PDF export, no notifications, no correction workflow, a tamper-evident (not tamper-proof) audit chain, and the CSP allowing inline and eval scripts as Livewire/Alpine require.
+4. **Categories can be added but not renamed or retired from the UI.** A misspelt category has to be corrected in the database. Small, but worth adding next.
+5. **Demo data depends on when it is seeded.** Nothing is created in the future, so a seed run early in the morning leaves today mostly "not updated". Re-run `php artisan migrate:fresh --seed` shortly before a demonstration.
+6. The limitations in README section 12 still apply: no server-side PDF export, no notifications, no correction workflow, a tamper-evident (not tamper-proof) audit chain, and the CSP allowing inline and eval scripts as Livewire/Alpine require.

@@ -94,9 +94,9 @@
             <section class="panel" aria-labelledby="today-title">
                 <div class="panel-header">
                     <h2 id="today-title" class="section-title">Today's activity</h2>
-                    <div class="segmented overflow-x-auto" role="tablist" aria-label="Filter today's activity">
+                    <div class="segmented overflow-x-auto" role="group" aria-label="Filter today's activity">
                         @foreach (['all' => 'All', 'not_updated' => 'Not updated', 'pending' => 'Pending', 'done' => 'Done'] as $key => $label)
-                            <button type="button" role="tab" wire:click="$set('tab', '{{ $key }}')" aria-selected="{{ $tab === $key ? 'true' : 'false' }}" @class(['segment', 'segment-active' => $tab === $key])>
+                            <button type="button" wire:click="$set('tab', '{{ $key }}')" aria-pressed="{{ $tab === $key ? 'true' : 'false' }}" @class(['segment', 'segment-active' => $tab === $key])>
                                 {{ $label }} <span class="num font-mono text-[11px] text-slate">{{ $tabCounts[$key] }}</span>
                             </button>
                         @endforeach

@@ -2,8 +2,11 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Actions\RecordActivityUpdate;
+use App\Enums\ActivityStatus;
 use App\Models\AuditEvent;
 use App\Notifications\SetPasswordNotification;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
@@ -119,5 +122,20 @@ class PasswordTest extends TestCase
         $this->assertSame('Set your '.config('app.name').' password', $mail->subject);
         $this->assertSame('Choose a password', $mail->actionText);
         $this->assertStringNotContainsString('received a password reset request', implode(' ', $mail->introLines));
+    }
+
+    public function test_the_profile_counts_this_months_updates_in_the_operational_timezone(): void
+    {
+        config(['operations.timezone' => 'Africa/Nairobi']); // UTC+3
+        $this->travelTo(CarbonImmutable::parse('2026-11-01 01:00:00', 'Africa/Nairobi'));
+        $user = $this->support();
+        $instance = $this->activityInstance([], '2026-10-31');
+
+        // 22:30 UTC on 31 Oct is 01:30 on 1 Nov in Nairobi: it belongs to November there.
+        $this->travelTo(CarbonImmutable::parse('2026-10-31 22:30:00', 'UTC'));
+        app(RecordActivityUpdate::class)->handle($instance, $user, ActivityStatus::Done, 'Checked just after local midnight.', 0);
+
+        $this->travelTo(CarbonImmutable::parse('2026-11-01 09:00:00', 'Africa/Nairobi'));
+        $this->actingAs($user)->get('/profile')->assertOk()->assertViewHas('updatesThisMonth', 1);
     }
 }

@@ -15,10 +15,10 @@
     <div class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
         <section class="panel min-w-0 overflow-hidden">
             <div class="flex flex-col gap-2 border-b border-hairline p-2.5 md:flex-row md:items-center">
-                <div class="segmented shrink-0" role="tablist" aria-label="Definition status">
-                    <button type="button" role="tab" wire:click="$set('status', 'active')" aria-selected="{{ $status === 'active' ? 'true' : 'false' }}" @class(['segment', 'segment-active' => $status === 'active'])>Active <span class="num font-mono text-[11px] text-slate">{{ $totals['active'] }}</span></button>
-                    <button type="button" role="tab" wire:click="$set('status', 'archived')" aria-selected="{{ $status === 'archived' ? 'true' : 'false' }}" @class(['segment', 'segment-active' => $status === 'archived'])>Archived <span class="num font-mono text-[11px] text-slate">{{ $totals['archived'] }}</span></button>
-                    <button type="button" role="tab" wire:click="$set('status', 'all')" aria-selected="{{ $status === 'all' ? 'true' : 'false' }}" @class(['segment', 'segment-active' => $status === 'all'])>All</button>
+                <div class="segmented shrink-0" role="group" aria-label="Definition status">
+                    <button type="button" wire:click="$set('status', 'active')" aria-pressed="{{ $status === 'active' ? 'true' : 'false' }}" @class(['segment', 'segment-active' => $status === 'active'])>Active <span class="num font-mono text-[11px] text-slate">{{ $totals['active'] }}</span></button>
+                    <button type="button" wire:click="$set('status', 'archived')" aria-pressed="{{ $status === 'archived' ? 'true' : 'false' }}" @class(['segment', 'segment-active' => $status === 'archived'])>Archived <span class="num font-mono text-[11px] text-slate">{{ $totals['archived'] }}</span></button>
+                    <button type="button" wire:click="$set('status', 'all')" aria-pressed="{{ $status === 'all' ? 'true' : 'false' }}" @class(['segment', 'segment-active' => $status === 'all'])>All</button>
                 </div>
                 <div class="relative flex-1">
                     <x-lucide-search class="pointer-events-none absolute left-2.5 top-2.5 size-4 text-slate" />
@@ -78,7 +78,7 @@
                                         <a href="{{ route('definitions.show', $definition) }}" class="font-medium hover:underline">{{ $definition->title }}</a>
                                         <p class="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11.5px] text-slate">
                                             {{ $definition->category?->name ?? 'Uncategorised' }} · {{ $definition->instances_count }} record{{ $definition->instances_count === 1 ? '' : 's' }}
-                                            @if ($definition->isArchived())<span class="chip chip-neutral"><x-lucide-archive class="size-3" /> Archived</span>@endif
+                                            @unless ($definition->lifecycle() === 'active')<x-ui.lifecycle :definition="$definition" />@endunless
                                         </p>
                                     </td>
                                     <td class="hidden whitespace-nowrap md:table-cell">

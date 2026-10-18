@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Services\AuditLogger;
 use App\Support\Ability;
+use App\Support\OpsClock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +21,8 @@ class ProfileController extends Controller
             'user' => $user,
             'abilities' => collect(Ability::matrix())->filter(fn ($ability, $key) => $user->can($key)),
             'recentUpdates' => $user->activityUpdates()->with('instance.definition')->latest('id')->limit(8)->get(),
-            'updatesThisMonth' => $user->activityUpdates()->where('created_at', '>=', now()->startOfMonth())->count(),
+            // The month starts at local midnight in the operational timezone.
+            'updatesThisMonth' => $user->activityUpdates()->where('created_at', '>=', OpsClock::today()->startOfMonth()->utc())->count(),
         ]);
     }
 

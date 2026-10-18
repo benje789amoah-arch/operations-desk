@@ -1,15 +1,15 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "operations-desk/app",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
-    "license": "MIT",
+    "description": "Operations Desk: daily activity tracking, handover and reporting for an applications support team.",
+    "keywords": ["laravel", "livewire", "operations", "handover", "applications-support"],
+    "license": "proprietary",
     "require": {
         "php": "^8.3",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
-        "livewire/livewire": "4.4",
+        "livewire/livewire": "^4.4",
         "mallardduck/blade-lucide-icons": "^2.0"
     },
     "require-dev": {

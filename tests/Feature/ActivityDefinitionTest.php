@@ -130,4 +130,20 @@ class ActivityDefinitionTest extends TestCase
             ->set('category', 'abc')
             ->assertDontSee('Verification of scheduled application jobs');
     }
+
+    public function test_definitions_show_whether_they_are_active_upcoming_ended_or_archived(): void
+    {
+        $this->freezeAt('2026-10-14 10:00:00');
+        $ended = ActivityDefinition::factory()->create(['title' => 'Legacy gateway reconciliation', 'starts_on' => '2026-01-01', 'ends_on' => '2026-09-30']);
+        $upcoming = ActivityDefinition::factory()->create(['title' => 'New partner availability check', 'starts_on' => '2026-11-01']);
+        $active = ActivityDefinition::factory()->create(['title' => 'Daily SMS count in comparison to SMS count from logs']);
+
+        $this->assertSame('ended', $ended->lifecycle());
+        $this->assertSame('upcoming', $upcoming->lifecycle());
+        $this->assertSame('active', $active->lifecycle());
+
+        $this->actingAs($this->support());
+        $this->get(route('definitions.show', $ended))->assertSee('Ended 30 Sep 2026')->assertDontSee('chip-done', false);
+        $this->get(route('definitions.index'))->assertSee('Ended 30 Sep 2026')->assertSee('Starts 01 Nov 2026');
+    }
 }

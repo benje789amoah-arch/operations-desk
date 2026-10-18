@@ -96,4 +96,20 @@ class PagesRenderTest extends TestCase
             ->assertHeader('X-Content-Type-Options', 'nosniff')
             ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     }
+
+    public function test_opening_a_form_only_address_shows_a_friendly_page(): void
+    {
+        $this->actingAs($this->support())
+            ->get('/logout')
+            ->assertStatus(405)
+            ->assertSee('That page cannot be opened directly');
+    }
+
+    public function test_filter_buttons_use_toggle_semantics_not_tab_roles(): void
+    {
+        $this->actingAs($this->support())
+            ->get('/')
+            ->assertSee('aria-pressed="true"', false)
+            ->assertDontSee('role="tab"', false);
+    }
 }

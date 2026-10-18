@@ -139,8 +139,11 @@ class DailyRegister extends Component
             'scheduleDefinition.required' => 'Choose the activity to schedule.',
         ]);
 
+        $definition = ActivityDefinition::findOrFail($this->scheduleDefinition);
+        $this->authorize('schedule', $definition);
+
         $instance = $action->handle(
-            ActivityDefinition::findOrFail($this->scheduleDefinition),
+            $definition,
             $this->date,
             $this->scheduleAssignee ? User::find($this->scheduleAssignee) : null,
             auth()->user(),

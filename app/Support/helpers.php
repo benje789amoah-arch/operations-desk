@@ -60,10 +60,3 @@ if (! function_exists('ops_tz')) {
         return OpsClock::timezoneAbbreviation();
     }
 }
-
-if (! function_exists('ops_relative')) {
-    function ops_relative(?DateTimeInterface $moment): string
-    {
-        return $moment ? OpsClock::local($moment)->diffForHumans() : '—';
-    }
-}
