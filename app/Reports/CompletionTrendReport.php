@@ -5,6 +5,7 @@ namespace App\Reports;
 use App\Reports\Concerns\FiltersInstances;
 use App\Support\Ability;
 use App\Support\OpsClock;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -72,7 +73,7 @@ class CompletionTrendReport extends Report
     /**
      * One row per date in the period (including days with nothing scheduled).
      *
-     * @return Collection<int, object{date: \Carbon\CarbonImmutable, total: int, done: int, pending: int, not_updated: int, rate: float}>
+     * @return Collection<int, object{date: CarbonImmutable, total: int, done: int, pending: int, not_updated: int, rate: float}>
      */
     public function results(ReportFilters $filters): Collection
     {

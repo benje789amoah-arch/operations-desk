@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\ActivityDefinition;
 use App\Models\ActivityInstance;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Database\Seeders\CategorySeeder;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -60,7 +61,7 @@ class PagesRenderTest extends TestCase
             $this->get($page)->assertOk();
         }
 
-        $this->assertTrue(app(\App\Services\AuditLogger::class)->verifyChain()['valid']);
+        $this->assertTrue(app(AuditLogger::class)->verifyChain()['valid']);
     }
 
     public function test_core_pages_render_with_an_empty_database(): void

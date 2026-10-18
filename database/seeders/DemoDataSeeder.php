@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Actions\AcknowledgeHandover;
 use App\Actions\GenerateDailyInstances;
 use App\Actions\Personnel\SetPersonnelActive;
 use App\Actions\RecordActivityUpdate;
 use App\Actions\SaveActivityDefinition;
 use App\Actions\ScheduleActivityInstance;
 use App\Actions\SubmitHandover;
-use App\Actions\AcknowledgeHandover;
 use App\Enums\ActivityStatus;
 use App\Enums\Priority;
 use App\Enums\Recurrence;
@@ -125,23 +125,23 @@ class DemoDataSeeder extends Seeder
             'sms' => ['Daily SMS count in comparison to SMS count from logs', 'Messaging & Telco', Priority::Critical, Recurrence::Daily, null, '08:00', '09:30', 'ama',
                 "1. Run the daily SMS count query against the application database for the previous day.\n2. Extract the delivered-SMS count from the aggregator gateway logs for the same window.\n3. Compare the two figures. Record both counts in Supporting details.\n4. Any difference above 0.05% is Pending and must be raised with the aggregator before handover."],
             'errors' => ['Review of application error logs', 'Application Health', Priority::High, Recurrence::Daily, null, '08:15', '10:00', 'kwesi',
-                "Review the last 24 hours of application error logs. Note new exception types, spikes compared with the previous day and any errors affecting customer journeys. Raise a ticket for anything new and reference it in the remark."],
+                'Review the last 24 hours of application error logs. Note new exception types, spikes compared with the previous day and any errors affecting customer journeys. Raise a ticket for anything new and reference it in the remark.'],
             'jobs' => ['Verification of scheduled application jobs', 'Scheduled Jobs & Queues', Priority::Normal, Recurrence::Daily, null, '08:30', '10:00', 'yaw',
-                "Confirm every scheduled job ran at its expected time and completed successfully. Check the queue workers are running and the failed-jobs table has no new entries. Re-run failed jobs only after confirming the cause."],
+                'Confirm every scheduled job ran at its expected time and completed successfully. Check the queue workers are running and the failed-jobs table has no new entries. Re-run failed jobs only after confirming the cause.'],
             'transactions' => ['Review of failed transaction records', 'Payments & Transactions', Priority::High, Recurrence::Daily, null, '09:00', '11:00', 'ama',
-                "List transactions that failed or are stuck in processing from the previous day. Confirm each has been reversed, retried or escalated. Record counts and any merchant affected."],
+                'List transactions that failed or are stuck in processing from the previous day. Confirm each has been reversed, retried or escalated. Record counts and any merchant affected.'],
             'availability' => ['Verification of service availability', 'Service Availability', Priority::High, Recurrence::Daily, null, '07:45', '08:30', 'emmanuel',
-                "Check customer-facing endpoints, USSD channels and partner APIs respond normally. Note any slow or failing endpoint with the time observed."],
+                'Check customer-facing endpoints, USSD channels and partner APIs respond normally. Note any slow or failing endpoint with the time observed.'],
             'incidents' => ['Follow-up on outstanding application incidents', 'Incident Management', Priority::Normal, Recurrence::Weekdays, null, '10:00', '16:00', 'kwesi',
-                "Review every open incident ticket. Update the ticket owner on progress, chase blocked items and record which incidents remain open at the end of the check."],
+                'Review every open incident ticket. Update the ticket owner on progress, chase blocked items and record which incidents remain open at the end of the check.'],
             'backups' => ['Database backup completion check', 'Infrastructure', Priority::Normal, Recurrence::Daily, null, '07:30', '09:00', 'emmanuel',
                 "Confirm last night's database backups completed, are the expected size and were copied to secondary storage."],
             'ssl' => ['SSL certificate expiry review', 'Security', Priority::Normal, Recurrence::Weekly, [1], '11:00', null, 'yaw',
-                "Review certificates for public endpoints. Anything expiring within 30 days must be raised with Platform Engineering."],
+                'Review certificates for public endpoints. Anything expiring within 30 days must be raised with Platform Engineering.'],
             'monthend' => ['Month-end settlement report sign-off', 'Payments & Transactions', Priority::High, Recurrence::Monthly, [1], '12:00', '17:00', 'ama',
-                "Reconcile the month-end settlement report against transaction records and obtain supervisor sign-off."],
+                'Reconcile the month-end settlement report against transaction records and obtain supervisor sign-off.'],
             'release' => ['Post-release smoke test', 'Application Health', Priority::High, Recurrence::AdHoc, null, '14:00', '16:00', null,
-                "After a production release, run the smoke test checklist on login, payments and messaging, and confirm no new errors in the logs for 30 minutes."],
+                'After a production release, run the smoke test checklist on login, payments and messaging, and confirm no new errors in the logs for 30 minutes.'],
         ];
 
         $offset = 0;

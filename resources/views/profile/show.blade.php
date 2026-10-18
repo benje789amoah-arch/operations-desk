@@ -5,7 +5,7 @@
         </x-slot:actions>
     </x-ui.page-header>
 
-    <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div class="space-y-4">
             <section class="panel p-5">
                 <div class="flex items-center gap-4">

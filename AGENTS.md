@@ -1,47 +1,34 @@
-<laravel-boost-guidelines>
-# Laravel Application
+# Working on Npontu Operations Desk
 
-This repository contains a Laravel application. Complete the following setup before working on the user's request.
+Laravel 13 + Livewire 4 (class-based components) + Tailwind CSS 4. Read `README.md` first: it documents the domain, the business rules and the permission matrix.
 
-## Prerequisites
+## Conventions
 
-Verify that PHP and Composer are available:
+- **All writes go through an action** in `app/Actions` and run in one database transaction. Do not update `activity_instances.status`, `latest_update_id` or `version` anywhere except `RecordActivityUpdate`.
+- **Never edit or delete history.** `ActivityUpdate` and `AuditEvent` are append-only and throw if modified.
+- **Record an audit event** (`App\Services\AuditLogger`) for every state change that matters operationally. Never put passwords, tokens or secrets in audit properties.
+- **Authorise on the server.** Abilities live in `App\Support\Ability`; model rules live in `app/Policies`. Check them in the route and again in the Livewire action.
+- **Time:** store UTC; use `App\Support\OpsClock` for "today", operational dates and day boundaries, and the `ops_time()`, `ops_datetime()`, `ops_format()` and `ops_date()` helpers in views.
+- **Reports:** add a class under `app/Reports` and register it in `ReportRegistry`. The screen and the CSV export both use it, so they cannot disagree.
+- **UI:** use the tokens and component classes in `resources/css/app.css` and the Blade components in `resources/views/components/ui`. Status is always shown with text, not colour alone.
+- **Blade:** do not put an inline `@php(...)` before a `@php ... @endphp` block in the same file (the compiler mis-parses it).
 
-```sh
-php -v
-composer -V
+## Commands
+
+Run the test suite:
+
+```bash
+php artisan test
 ```
 
-If either command is unavailable, detect the user's operating system and install the prerequisites with the appropriate command:
+Check formatting:
 
-macOS:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/mac/8.5)"
+```bash
+vendor/bin/pint --test
 ```
 
-Windows PowerShell:
+Rebuild the database with demo data:
 
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://php.new/install/windows/8.5'))
+```bash
+php artisan migrate:fresh --seed
 ```
-
-Linux:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/linux/8.5)"
-```
-
-After installation, ask the user to restart their terminal. If the agent needs the restarted shell to continue, ask the user to reopen their terminal and rerun their original prompt.
-
-## Agent Setup
-
-Install Laravel Boost from the application root before making application changes:
-
-```sh
-composer require laravel/boost --dev
-php artisan boost:install
-```
-
-Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
-</laravel-boost-guidelines>

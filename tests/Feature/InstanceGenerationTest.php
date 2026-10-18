@@ -6,6 +6,9 @@ use App\Actions\GenerateDailyInstances;
 use App\Enums\Recurrence;
 use App\Models\ActivityDefinition;
 use App\Models\ActivityInstance;
+use App\Models\AuditEvent;
+use App\Support\OpsClock;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -43,7 +46,7 @@ class InstanceGenerationTest extends TestCase
         $this->assertSame(0, $this->generate('2026-10-14'));
 
         $this->assertSame(3, ActivityInstance::count());
-        $this->assertSame(1, \App\Models\AuditEvent::query()->where('event', 'activity.instances_generated')->count());
+        $this->assertSame(1, AuditEvent::query()->where('event', 'activity.instances_generated')->count());
     }
 
     public function test_a_second_run_never_resets_an_instance_that_already_has_history(): void
@@ -114,8 +117,8 @@ class InstanceGenerationTest extends TestCase
         ActivityDefinition::factory()->create(['scheduled_time' => '08:00']);
 
         // 22:30 UTC on the 13th is already 01:30 on the 14th in Nairobi.
-        $this->travelTo(\Carbon\CarbonImmutable::parse('2026-10-13 22:30:00', 'UTC'));
-        app(GenerateDailyInstances::class)->handle(\App\Support\OpsClock::today());
+        $this->travelTo(CarbonImmutable::parse('2026-10-13 22:30:00', 'UTC'));
+        app(GenerateDailyInstances::class)->handle(OpsClock::today());
 
         $instance = ActivityInstance::sole();
         $this->assertSame('2026-10-14', $instance->operational_date->format('Y-m-d'));

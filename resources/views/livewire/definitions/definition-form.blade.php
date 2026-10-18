@@ -6,14 +6,14 @@
         :title="$definition ? 'Edit '.$definition->code : 'New activity definition'"
         :description="$definition ? 'Changes apply to register entries created from now on. Existing entries and their history are not altered.' : 'Describe a check the desk performs and how often it should appear on the daily register.'" />
 
-    <form wire:submit="save" class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]" novalidate>
+    <form wire:submit="save" class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]" novalidate>
         <div class="space-y-4">
             {{-- 01 Identity --}}
             <section class="panel">
                 <div class="panel-header">
                     <h2 class="section-title"><span class="mono mr-1.5 text-slate">01</span> Identity &amp; classification</h2>
                 </div>
-                <div class="grid gap-4 p-4 md:grid-cols-[12rem_1fr]">
+                <div class="grid grid-cols-1 gap-4 p-4 md:grid-cols-[12rem_1fr]">
                     <div>
                         <label class="field-label" for="code">Definition code</label>
                         <div class="relative">
@@ -101,7 +101,7 @@
                         <p class="rounded-md border border-hairline bg-canvas p-3 text-[12.5px] text-slate">Ad-hoc activities are never created automatically. A supervisor schedules them for a specific date from the daily register.</p>
                     @endif
 
-                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <div>
                             <label class="field-label" for="scheduled-time">Scheduled time ({{ ops_tz() }})</label>
                             <input id="scheduled-time" type="time" wire:model="form.scheduled_time" class="input font-mono">

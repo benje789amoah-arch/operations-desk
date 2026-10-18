@@ -71,7 +71,7 @@
         <p class="mt-3 border-t border-hairline pt-2.5 text-[12px] text-slate">Statuses show the current state. Each submitted handover below keeps a frozen snapshot of the state at the moment it was submitted.</p>
     </section>
 
-    <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div class="min-w-0 space-y-4">
             {{-- Outstanding --}}
             <section class="panel" aria-labelledby="outstanding-title">

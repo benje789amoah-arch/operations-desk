@@ -18,10 +18,10 @@
         @endif
     </x-ui.page-header>
 
-    <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
         <form wire:submit="save" class="panel" novalidate>
             <div class="panel-header"><h2 class="section-title">Personnel details</h2></div>
-            <div class="grid gap-4 p-4 md:grid-cols-2">
+            <div class="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
                 <div>
                     <label for="name" class="field-label">Full name</label>
                     <input id="name" type="text" wire:model="name" class="input" autocomplete="off" @error('name') aria-invalid="true" @enderror>

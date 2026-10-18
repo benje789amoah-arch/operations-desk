@@ -20,7 +20,7 @@
         </x-slot:actions>
     </x-ui.page-header>
 
-    <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_420px]">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_420px]">
         <div class="space-y-4">
             <section class="panel">
                 <div class="panel-header"><h2 class="section-title">Activity details</h2></div>

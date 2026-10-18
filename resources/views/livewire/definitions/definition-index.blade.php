@@ -12,7 +12,7 @@
         </x-slot:actions>
     </x-ui.page-header>
 
-    <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
         <section class="panel min-w-0 overflow-hidden">
             <div class="flex flex-col gap-2 border-b border-hairline p-2.5 md:flex-row md:items-center">
                 <div class="segmented shrink-0" role="tablist" aria-label="Definition status">

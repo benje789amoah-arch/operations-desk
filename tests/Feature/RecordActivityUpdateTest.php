@@ -4,11 +4,14 @@ namespace Tests\Feature;
 
 use App\Actions\RecordActivityUpdate;
 use App\Enums\ActivityStatus;
+use App\Exceptions\StaleActivityUpdateException;
 use App\Livewire\Activities\RecordUpdateForm;
 use App\Models\ActivityInstance;
 use App\Models\ActivityUpdate;
 use App\Models\AuditEvent;
+use App\Models\User;
 use App\Services\AuditLogger;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
@@ -190,7 +193,7 @@ class RecordActivityUpdateTest extends TestCase
 
         $action->handle($instance, $user, ActivityStatus::Done, 'All endpoints responded normally.', expectedVersion: 0);
 
-        $this->expectException(\App\Exceptions\StaleActivityUpdateException::class);
+        $this->expectException(StaleActivityUpdateException::class);
         $action->handle($instance, $user, ActivityStatus::Done, 'All endpoints responded normally.', expectedVersion: 0);
     }
 
@@ -201,7 +204,7 @@ class RecordActivityUpdateTest extends TestCase
 
         $this->app->instance(AuditLogger::class, new class extends AuditLogger
         {
-            public function record(string $event, string $description, ?\Illuminate\Database\Eloquent\Model $subject = null, ?string $subjectLabel = null, array $properties = [], ?\App\Models\User $actor = null): AuditEvent
+            public function record(string $event, string $description, ?Model $subject = null, ?string $subjectLabel = null, array $properties = [], ?User $actor = null): AuditEvent
             {
                 throw new RuntimeException('Simulated database failure while writing the audit log.');
             }

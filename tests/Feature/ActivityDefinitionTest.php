@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\GenerateDailyInstances;
 use App\Enums\Recurrence;
 use App\Livewire\Definitions\DefinitionForm;
 use App\Livewire\Definitions\DefinitionIndex;
@@ -100,7 +101,7 @@ class ActivityDefinitionTest extends TestCase
             ->assertDispatched('toast');
 
         $this->assertTrue($definition->fresh()->isArchived());
-        $this->assertSame(0, app(\App\Actions\GenerateDailyInstances::class)->handle('2026-10-15'));
+        $this->assertSame(0, app(GenerateDailyInstances::class)->handle('2026-10-15'));
         $this->assertTrue($instance->fresh()->exists);
         $this->assertDatabaseHas('audit_events', ['event' => 'definition.archived']);
     }

@@ -45,7 +45,7 @@
                    definition="Distinct activities, of any date, that received at least one update today." />
     </div>
 
-    <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div class="min-w-0 space-y-4">
             {{-- Requires attention --}}
             <section class="panel" aria-labelledby="attention-title">

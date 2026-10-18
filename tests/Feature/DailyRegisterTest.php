@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Actions\RecordActivityUpdate;
 use App\Enums\ActivityStatus;
+use App\Enums\Recurrence;
 use App\Livewire\Activities\DailyRegister;
 use App\Livewire\Dashboard;
 use App\Models\ActivityDefinition;
@@ -37,7 +38,7 @@ class DailyRegisterTest extends TestCase
         $this->freezeAt('2026-10-14 12:00:00');
         $this->threeStates();
         // Ad-hoc, so opening today's register does not also generate it for today.
-        $this->activityInstance(['title' => 'An activity from another day', 'recurrence' => \App\Enums\Recurrence::AdHoc], '2026-10-12');
+        $this->activityInstance(['title' => 'An activity from another day', 'recurrence' => Recurrence::AdHoc], '2026-10-12');
 
         Livewire::actingAs($this->support())
             ->withQueryParams(['date' => '2026-10-14'])

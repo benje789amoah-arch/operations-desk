@@ -106,7 +106,7 @@
                             @if ($inspecting === $event->id)
                                 <tr id="inspect-{{ $event->id }}" wire:key="audit-detail-{{ $event->id }}" class="bg-canvas">
                                     <td colspan="6" class="!p-0">
-                                        <div class="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                                        <div class="grid grid-cols-1 gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                                             <div>
                                                 <h3 class="eyebrow mb-2">State change</h3>
                                                 @if ($changes)

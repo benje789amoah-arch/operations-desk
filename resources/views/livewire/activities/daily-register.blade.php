@@ -125,7 +125,7 @@
         </div>
     </div>
 
-    <div @class(['grid gap-4', 'xl:grid-cols-[minmax(0,1fr)_440px]' => $selectedInstance])>
+    <div @class(['grid grid-cols-1 gap-4', 'xl:grid-cols-[minmax(0,1fr)_440px]' => $selectedInstance])>
         {{-- Register --}}
         <section class="panel min-w-0 overflow-hidden" aria-label="Activities for {{ $day->format('d M Y') }}">
             <div class="panel-header">
