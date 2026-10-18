@@ -1,0 +1,179 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+
+@source '../views/**/*.blade.php';
+@source '../../app/**/*.php';
+
+/*
+|--------------------------------------------------------------------------
+| Npontu Operations Desk design tokens
+|--------------------------------------------------------------------------
+| Warm near-white canvas, deep ink text, forest green for actions and
+| completed work, restrained amber for pending work, muted red for critical
+| states. Status is never conveyed by colour alone: every chip has a label.
+*/
+@theme {
+    --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Mono', 'Consolas', monospace;
+
+    --color-canvas: #f6f7f5;
+    --color-surface: #ffffff;
+    --color-subtle: #eef1ed;
+    --color-wash: #fafbf9;
+    --color-hairline: #e2e5e1;
+    --color-rule: #d3d8d2;
+    --color-ink: #202522;
+    --color-ink-soft: #2f3632;
+    --color-slate: #5a6560;
+    --color-muted: #7b8781;
+
+    --color-forest: #245c46;
+    --color-forest-dark: #1b4534;
+    --color-forest-tint: #ebf3ef;
+    --color-forest-line: #b9d3c6;
+
+    --color-amber: #a2470a;
+    --color-amber-strong: #b45309;
+    --color-amber-tint: #fef3c7;
+    --color-amber-line: #f2cf8d;
+
+    --color-crimson: #991b1b;
+    --color-crimson-tint: #fee2e2;
+    --color-crimson-line: #f1b5b5;
+
+    --shadow-pop: 0 4px 12px -2px rgb(32 37 34 / 0.08), 0 2px 4px -1px rgb(32 37 34 / 0.05);
+    --shadow-sheet: 0 12px 32px -4px rgb(32 37 34 / 0.14), 0 4px 8px -2px rgb(32 37 34 / 0.05);
+
+    --animate-fade-in: fade-in 160ms ease-out;
+    --animate-slide-in: slide-in 200ms ease-out;
+
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slide-in {
+        from { transform: translateX(16px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+}
+
+@layer base {
+    html {
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+    }
+
+    body {
+        @apply bg-canvas text-ink font-sans text-[13.5px] leading-[1.45];
+        font-feature-settings: 'cv11', 'ss01';
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-forest);
+        outline-offset: 2px;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+
+    ::selection {
+        background: var(--color-forest-tint);
+        color: var(--color-ink);
+    }
+}
+
+@layer components {
+    /* Typography */
+    .page-title { @apply text-[22px] sm:text-[26px] font-semibold tracking-[-0.02em] leading-tight text-ink; }
+    .section-title { @apply text-[15px] font-semibold tracking-[-0.005em] text-ink; }
+    .eyebrow { @apply font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate; }
+    .meta { @apply text-[12px] text-slate; }
+    .mono { @apply font-mono tracking-[-0.01em]; }
+    .num { font-variant-numeric: tabular-nums; }
+
+    /* Surfaces */
+    .panel { @apply bg-surface border border-hairline rounded-lg; }
+    .panel-header { @apply flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-hairline; }
+    .panel-body { @apply p-4; }
+
+    /* Buttons: always "btn" plus one variant, e.g. class="btn btn-primary" */
+    .btn { @apply inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-md text-[13px] font-medium whitespace-nowrap transition-colors duration-100 disabled:opacity-55 disabled:cursor-not-allowed select-none; }
+    .btn-sm { @apply h-8 px-2.5 text-[12.5px] gap-1.5; }
+    .btn-primary { @apply bg-forest text-white hover:bg-forest-dark; }
+    .btn-secondary { @apply bg-surface text-ink border border-hairline hover:bg-canvas hover:border-slate; }
+    .btn-ghost { @apply text-slate hover:bg-subtle hover:text-ink; }
+    .btn-danger { @apply bg-crimson text-white hover:bg-[#7f1616]; }
+    .btn-danger-ghost { @apply text-crimson hover:bg-crimson-tint; }
+
+    /* Forms */
+    .field-label { @apply block text-[12.5px] font-medium text-ink mb-1.5; }
+    .field-hint { @apply mt-1.5 text-[12px] text-slate; }
+    .field-error { @apply mt-1.5 text-[12px] font-medium text-crimson flex items-start gap-1; }
+    .input { @apply block w-full h-9 rounded border border-hairline bg-surface px-3 text-[13px] text-ink placeholder:text-muted transition-colors focus:outline-none focus:border-forest focus:ring-1 focus:ring-forest disabled:bg-subtle disabled:text-slate; }
+    .input[aria-invalid='true'] { @apply border-crimson focus:border-crimson focus:ring-crimson; }
+    textarea.input { @apply h-auto py-2 leading-relaxed; }
+    select.input { @apply pr-8 appearance-none bg-no-repeat; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%235a6560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-position: right 0.55rem center; }
+    .checkbox { @apply size-4 rounded-[3px] border-[#8a9690] text-forest accent-forest focus-visible:outline-2 focus-visible:outline-forest; }
+
+    /* Status chips: always text + colour + icon, e.g. class="chip chip-done" */
+    .chip { @apply inline-flex items-center gap-1 rounded px-1.5 py-[2px] font-mono text-[11px] font-medium leading-4 border whitespace-nowrap; }
+    .chip-done { @apply bg-forest-tint text-forest border-forest-line; }
+    .chip-pending { @apply bg-amber-tint text-amber border-amber-line; }
+    .chip-critical { @apply bg-crimson-tint text-crimson border-crimson-line; }
+    .chip-neutral { @apply bg-subtle text-slate border-hairline; }
+    .chip-ink { @apply bg-ink text-white border-ink; }
+
+    /* Data tables */
+    .table-ops { @apply w-full text-left border-collapse; }
+    .table-ops thead th { @apply bg-canvas px-3 py-2.5 text-[11.5px] font-medium uppercase tracking-[0.04em] text-slate border-b border-hairline whitespace-nowrap; }
+    .table-ops tbody td { @apply px-3 py-3 align-top border-b border-hairline; }
+    .table-ops tbody tr { @apply transition-colors; }
+    .table-ops tbody tr:hover { @apply bg-wash; box-shadow: inset 2px 0 0 var(--color-forest); }
+    .table-ops tbody tr:last-child td { @apply border-b-0; }
+
+    /* Tabs / segmented controls */
+    .segmented { @apply inline-flex items-center rounded-md border border-hairline bg-canvas p-0.5; }
+    .segment { @apply inline-flex items-center gap-1.5 h-7 px-2.5 rounded-[5px] text-[12.5px] font-medium text-slate hover:text-ink whitespace-nowrap; }
+    .segment-active { @apply bg-surface text-ink shadow-[0_1px_2px_rgb(32_37_34/0.08)] ring-1 ring-hairline; }
+
+    .nav-link { @apply flex items-center gap-3 h-9 px-3 rounded-md text-[13.5px] text-ink-soft hover:bg-subtle hover:text-ink transition-colors; }
+    .nav-link-active { @apply bg-forest text-white hover:bg-forest hover:text-white; }
+
+    .kbd { @apply inline-flex items-center rounded border border-hairline bg-canvas px-1 font-mono text-[10.5px] text-slate; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| Print
+|--------------------------------------------------------------------------
+| Navigation and controls are removed; content prints in black on white
+| with readable sizes and no clipped tables.
+*/
+@media print {
+    @page { margin: 14mm 12mm; }
+
+    body { background: #fff !important; font-size: 10.5pt; color: #000; }
+    .no-print, nav, header[data-app-header], aside[data-app-sidebar], button, [data-toasts] { display: none !important; }
+    .print-only { display: block !important; }
+    .panel { border-color: #bbb !important; break-inside: avoid; }
+    .table-ops thead th { background: #f2f2f2 !important; color: #000; }
+    .table-ops tbody tr:hover { box-shadow: none; }
+    .overflow-x-auto { overflow: visible !important; }
+    a { color: inherit; text-decoration: none; }
+    .print-break-before { break-before: page; }
+    .print-avoid-break { break-inside: avoid; }
+}
+
+.print-only { display: none; }
